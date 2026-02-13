@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Environment Variables
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Expo / RN
+.expo/
+ios/build/
+android/build/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+
+# OS files
+.DS_Store
+Thumbs.db
