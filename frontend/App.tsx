@@ -8,6 +8,8 @@ import STTScreen from "./src/screens/STTScreen";
 import TestScreen from "./src/screens/TestScreen";
 import IntroScreen from "./src/screens/IntroScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
+import WriteScreen from "./src/screens/WriteScreen";
+import PostDetailScreen from "./src/screens/PostDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +29,8 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="STT" component={STTScreen} />
+        <Stack.Screen name="Write" component={WriteScreen} />
+        <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
