@@ -1,80 +1,61 @@
 import React, { useEffect, useRef } from "react";
-import { View, Animated, StyleSheet, Dimensions } from "react-native";
-import { COLORS } from "../styles/theme";
-
-const { width } = Dimensions.get("window");
+import { View, Animated } from "react-native";
 
 /**
  * @description 음성 녹음 시 파동 애니메이션
  */
-const Waveform = ({ isRecording }: { isRecording: boolean }) => {
+type WaveformProps = {
+  isRecording: boolean;
+};
+
+const Waveform = ({ isRecording }: WaveformProps) => {
   const animValues = useRef([...Array(15)].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     if (isRecording) {
-      const animations = animValues.map((anim, index) => {
+      const animations = animValues.map((anim) => {
         return Animated.loop(
           Animated.sequence([
             Animated.timing(anim, {
               toValue: 1,
               duration: 400 + Math.random() * 300,
-              useNativeDriver: true,
+              useNativeDriver: false, // Height animation requires false for native driver unless using transform
             }),
             Animated.timing(anim, {
               toValue: 0,
               duration: 400 + Math.random() * 300,
-              useNativeDriver: true,
+              useNativeDriver: false,
             }),
           ]),
         );
       });
       animations.forEach((a) => a.start());
       return () => animations.forEach((a) => a.stop());
+    } else {
+      animValues.forEach((anim) => anim.setValue(0));
     }
-  }, [isRecording]);
+  }, [isRecording, animValues]);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row items-center justify-center h-40 w-full">
       {animValues.map((anim, i) => (
         <Animated.View
           key={i}
-          style={[
-            styles.bar,
-            {
-              backgroundColor: COLORS.midnightCalm.point,
-              height: anim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 100],
-              }),
-              transform: [
-                {
-                  scaleY: anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [1, 1.5],
-                  }),
-                },
-              ],
-            },
-          ]}
+          className="w-1.5 mx-1.5 rounded-full bg-[#00E0D0]"
+          style={{
+            height: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [24, 120],
+            }),
+            opacity: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 1],
+            }),
+          }}
         />
       ))}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 150,
-    width: "100%",
-  },
-  bar: {
-    width: 6,
-    marginHorizontal: 3,
-    borderRadius: 3,
-  },
-});
 
 export default Waveform;
