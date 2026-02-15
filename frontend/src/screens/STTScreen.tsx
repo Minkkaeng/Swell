@@ -8,9 +8,21 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import Waveform from "../components/Waveform";
-import { Mic, Square, ArrowLeft, Menu, AlertTriangle, ShieldCheck, Send } from "lucide-react-native";
+import {
+  Mic,
+  Square,
+  ArrowLeft,
+  Menu,
+  AlertTriangle,
+  ShieldCheck,
+  Send,
+  ShieldAlert,
+  Settings,
+} from "lucide-react-native";
+import { Modal } from "react-native";
 import { api } from "../services/api";
 
 /**
@@ -22,7 +34,8 @@ const STTScreen = ({ navigation }: any) => {
   const [isPosting, setIsPosting] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("일상");
-  const [showGuide, setShowGuide] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
+  const [micPermission, setMicPermission] = useState<"granted" | "denied" | "undetermined">("undetermined");
 
   const CATEGORIES = ["고민", "일상", "위로", "감사", "질문"];
 
@@ -31,24 +44,65 @@ const STTScreen = ({ navigation }: any) => {
     return targets.some((target) => recognizedText.includes(target));
   };
 
-  const toggleRecording = () => {
+  const [transcriptionTimer, setTranscriptionTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const toggleRecording = async () => {
+    if (micPermission !== "granted") {
+      Alert.alert("마이크 권한 필요", "음성 인식을 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해 주세요.", [
+        { text: "취소", style: "cancel" },
+        { text: "설정으로 이동", onPress: () => setMicPermission("granted") }, // 시뮬레이션: 승인 클릭 시 granted로 변경
+      ]);
+      if (micPermission === "undetermined") return;
+    }
+
     if (isRecording) {
       setIsRecording(false);
-      // 시뮬레이션: 녹음 종료 후 텍스트화된 결과 표시
-      const dummyResult =
-        recognizedText || "오늘 하루는 정말 긴 파도 같았어요. 하지만 그 끝에는 고요함이 기다리고 있겠죠.";
-      setRecognizedText(dummyResult);
+      if (transcriptionTimer) clearInterval(transcriptionTimer);
 
-      if (isAggressive()) {
-        setShowGuide(true);
-      } else {
+      try {
+        const result = await api.stt.recognize();
+        const textResult =
+          result.text ||
+          recognizedText ||
+          "오늘 하루는 정말 긴 파도 같았어요. 하지만 그 끝에는 고요함이 기다리고 있겠죠.";
+        setRecognizedText(textResult);
+        setIsReviewing(true);
+      } catch (error) {
+        console.error("STT Error:", error);
+        if (!recognizedText) {
+          setRecognizedText("오늘 하루는 정말 긴 파도 같았어요. 하지만 그 끝에는 고요함이 기다리고 있겠죠.");
+        }
         setIsReviewing(true);
       }
     } else {
       setIsRecording(true);
       setIsReviewing(false);
       setRecognizedText("");
-      setShowGuide(false);
+      // setShowGuide(false); // Removed as per instruction
+
+      // 실시간 시각화 시뮬레이션
+      const dummyTexts = [
+        "지금",
+        "지금 이",
+        "지금 이 순간",
+        "지금 이 순간의",
+        "지금 이 순간의 파도가",
+        "지금 이 순간의 파도가 정말",
+        "고요하게",
+        "고요하게 느껴지네요.",
+        "마음이",
+        "마음이 편안해집니다.",
+      ];
+      let index = 0;
+      const timer = setInterval(() => {
+        if (index < dummyTexts.length) {
+          setRecognizedText((prev) => prev + (prev ? " " : "") + dummyTexts[index].split(" ").pop());
+          // Or just update with partial matches
+          setRecognizedText(dummyTexts[index]);
+          index++;
+        }
+      }, 800);
+      setTranscriptionTimer(timer);
     }
   };
 
@@ -74,32 +128,30 @@ const STTScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView className="flex-1 bg-[#001220]">
-      {/* I-Message Guide Modal */}
-      {showGuide && (
-        <View className="absolute top-0 left-0 right-0 bottom-0 bg-[#001220]/90 z-50 items-center justify-center p-8 blur-sm">
-          <View className="bg-[#002845] p-10 rounded-[50px] border border-[#00E0D0]/20 w-full items-center shadow-2xl">
-            <View className="w-20 h-20 bg-[#00E0D0]/10 rounded-full items-center justify-center mb-8">
-              <Text className="text-[#00E0D0] text-4xl">🌊</Text>
+      {/* Community Guidelines Modal */}
+      <Modal visible={showGuide} transparent={true} animationType="fade" onRequestClose={() => setShowGuide(false)}>
+        <View className="flex-1 bg-black/80 items-center justify-center p-8">
+          <View className="bg-[#002845] p-10 rounded-[40px] border border-[#00E0D0]/20 w-full items-center">
+            <View className="w-16 h-16 bg-[#00E0D0]/10 rounded-full items-center justify-center mb-6">
+              <ShieldAlert size={32} color="#00E0D0" />
             </View>
-            <Text className="text-[#E0E0E0] text-2xl font-bold mb-6 text-center">파도를 고르게 다듬어볼까요?</Text>
-            <Text className="text-[#E0E0E0]/60 text-center leading-8 mb-10 text-[16px]">
-              "그 사람"에 대한 미움보다,{"\n"}
-              그로 인해 느낀 <Text className="text-[#00E0D0] font-bold">"나"의 아픔</Text>과 감정에{"\n"}더 집중해
-              보세요.{"\n"}당신의 마음이 가장 소중하니까요.
+            <Text className="text-[#E0E0E0] text-xl font-bold mb-4 text-center">커뮤니티 가이드라인</Text>
+            <Text className="text-[#E0E0E0]/60 text-center leading-7 mb-8 text-sm">
+              목소리로 담은 당신의 진심이{"\n"}상처가 되지 않도록 주의해 주세요.{"\n\n"}
+              <Text className="text-[#00E0D0]">• 타인을 비방하거나 공격하는 언어 자제{"\n"}</Text>
+              <Text className="text-[#00E0D0]">• 감정을 쏟아낸 후 내용을 가다듬어 보기</Text>
             </Text>
             <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setShowGuide(false);
-                setIsReviewing(true);
-              }}
-              className="bg-[#00E0D0] py-5 px-12 rounded-[24px] shadow-lg w-full items-center"
+              onPress={() => setShowGuide(false)}
+              className="bg-[#00E0D0] py-4 px-10 rounded-2xl w-full items-center"
             >
-              <Text className="text-[#001220] font-bold text-lg">나의 감정에 집중하기</Text>
+              <Text className="text-[#001220] font-bold">확인했습니다</Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
+
+      {/* I-Message Guide Modal removed as per user request for no filtering */}
 
       {/* Header */}
       <View className="px-8 py-8 flex-row justify-between items-center">
@@ -137,20 +189,14 @@ const STTScreen = ({ navigation }: any) => {
                   {isRecording ? "RECORDING..." : "VOICE ARCHIVE"}
                 </Text>
               </View>
-              <Text
-                className={`text-2xl text-center leading-10 font-light px-4 ${
-                  isAggressive() ? "text-[#E7433C]" : "text-[#E0E0E0]"
-                }`}
-              >
+              <Text className="text-2xl text-center leading-10 font-light px-4 text-[#E0E0E0]">
                 {isRecording ? recognizedText || "말씀해 주세요..." : "오늘 당신의 감정은 어떤 이름을 가지고 있나요?"}
               </Text>
 
-              {isRecording && isAggressive() && (
-                <View className="mt-8 flex-row items-center bg-[#E7433C]/10 px-4 py-2 rounded-full">
-                  <AlertTriangle size={14} color="#E7433C" />
-                  <Text className="text-[#E7433C] text-[10px] font-bold ml-2">
-                    타인보다는 '나'의 감정에 집중해보세요
-                  </Text>
+              {isRecording && (
+                <View className="mt-8 flex-row items-center bg-[#00E0D0]/10 px-4 py-2 rounded-full">
+                  <ActivityIndicator size="small" color="#00E0D0" />
+                  <Text className="text-[#00E0D0] text-[10px] font-bold ml-2">목소리를 기록하고 있습니다...</Text>
                 </View>
               )}
             </View>
@@ -167,7 +213,13 @@ const STTScreen = ({ navigation }: any) => {
                   isRecording ? "bg-[#E7433C]" : "bg-[#00E0D0]"
                 }`}
                 style={
-                  isRecording ? {} : { shadowColor: "#00E0D0", shadowOpacity: 0.5, shadowRadius: 20, elevation: 12 }
+                  isRecording
+                    ? {}
+                    : Platform.select({
+                        ios: { shadowColor: "#00E0D0", shadowOpacity: 0.5, shadowRadius: 20 },
+                        android: { elevation: 12 },
+                        web: { boxShadow: "0px 0px 20px rgba(0, 224, 208, 0.5)" },
+                      })
                 }
               >
                 {isRecording ? <Square size={36} color="white" fill="white" /> : <Mic size={36} color="#001220" />}
@@ -222,8 +274,11 @@ const STTScreen = ({ navigation }: any) => {
               />
             </View>
 
-            <TouchableOpacity onPress={() => setIsReviewing(false)} className="mt-8 self-center">
-              <Text className="text-[#00E0D0] text-sm font-bold border-b border-[#00E0D0]">다시 녹음하기</Text>
+            <TouchableOpacity onPress={() => setIsReviewing(false)} className="mt-8 self-center items-center">
+              <Text className="text-[#00E0D0] text-sm font-bold border-b border-[#001220] mb-2">
+                원하는 대로 내용을 직접 수정할 수 있습니다.
+              </Text>
+              <Text className="text-[#00E0D0] text-xs font-medium border-b border-[#00E0D0]">다시 녹음하기</Text>
             </TouchableOpacity>
           </View>
         )}

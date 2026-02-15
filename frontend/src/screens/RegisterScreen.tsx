@@ -25,6 +25,7 @@ const RegisterScreen = ({ navigation }: any) => {
     agreeTerms: false,
     agreePrivacy: false,
     carrier: "",
+    verificationMethod: "", // "PASS" or "SMS"
     isVerified: false,
   });
   const [showBirthMask, setShowBirthMask] = useState(false);
@@ -54,7 +55,7 @@ const RegisterScreen = ({ navigation }: any) => {
 
   const isStepValid = () => {
     if (step === 1) return formData.agreeTerms && formData.agreePrivacy;
-    if (step === 2) return formData.carrier !== "" && formData.isVerified;
+    if (step === 2) return formData.carrier !== "" && formData.verificationMethod !== "" && formData.isVerified;
     if (step === 3) return formData.name && isAdult(formData.birthDate);
     if (step === 4) return formData.gender !== "";
     return false;
@@ -92,6 +93,12 @@ const RegisterScreen = ({ navigation }: any) => {
               <View className="bg-[#E7433C]/10 self-start px-3 py-1.5 rounded-full flex-row items-center mb-6">
                 <Shield size={12} color="#E7433C" />
                 <Text className="text-[#E7433C] text-[10px] font-bold ml-1.5 tracking-tighter">19+ 성인인증 필수</Text>
+              </View>
+
+              <View className="bg-[#002845]/40 p-6 rounded-3xl border border-white/5 mb-8">
+                <Text className="text-[#E0E0E0]/60 text-xs leading-5">
+                  너울은 성인 전용 익명 커뮤니티입니다.{"\n"}본인인증을 통해 만 19세 이상임을 확인합니다.
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -169,26 +176,53 @@ const RegisterScreen = ({ navigation }: any) => {
               </View>
 
               {formData.carrier !== "" && (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => setFormData({ ...formData, isVerified: true })}
-                  className={`mt-4 p-6 rounded-3xl flex-row items-center border ${
-                    formData.isVerified ? "bg-[#00E0D0]/10 border-[#00E0D0]" : "bg-[#002845]/60 border-white/10"
-                  }`}
-                >
-                  <View
-                    className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${
-                      formData.isVerified ? "bg-[#00E0D0]" : "bg-white/5"
+                <View className="mt-4 space-y-4">
+                  <Text className="text-[#E0E0E0]/40 text-xs font-bold mb-2 ml-1">인증 방식 선택</Text>
+
+                  {/* PASS Option */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setFormData({ ...formData, verificationMethod: "PASS", isVerified: true })}
+                    className={`p-6 rounded-3xl flex-row items-center border ${
+                      formData.verificationMethod === "PASS"
+                        ? "bg-[#00E0D0]/10 border-[#00E0D0]"
+                        : "bg-[#002845]/60 border-white/10"
                     }`}
                   >
-                    <Shield size={24} color={formData.isVerified ? "#001220" : "#E0E0E0"} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-[#E0E0E0] font-bold">PASS로 본인인증</Text>
-                    <Text className="text-[#E0E0E0]/40 text-xs mt-1">간편하고 안전하게 인증하기</Text>
-                  </View>
-                  {formData.isVerified && <CheckCircle2 size={24} color="#00E0D0" />}
-                </TouchableOpacity>
+                    <View
+                      className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${formData.verificationMethod === "PASS" ? "bg-[#00E0D0]" : "bg-white/5"}`}
+                    >
+                      <Shield size={24} color={formData.verificationMethod === "PASS" ? "#001220" : "#E0E0E0"} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#E0E0E0] font-bold">PASS 앱으로 인증</Text>
+                      <Text className="text-[#E0E0E0]/40 text-xs mt-1">간편하고 빠르게 앱에서 확인</Text>
+                    </View>
+                    {formData.verificationMethod === "PASS" && <CheckCircle2 size={24} color="#00E0D0" />}
+                  </TouchableOpacity>
+
+                  {/* SMS Option */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setFormData({ ...formData, verificationMethod: "SMS", isVerified: true })}
+                    className={`p-6 rounded-3xl flex-row items-center border ${
+                      formData.verificationMethod === "SMS"
+                        ? "bg-[#00E0D0]/10 border-[#00E0D0]"
+                        : "bg-[#002845]/60 border-white/10"
+                    }`}
+                  >
+                    <View
+                      className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${formData.verificationMethod === "SMS" ? "bg-[#00E0D0]" : "bg-white/5"}`}
+                    >
+                      <Smartphone size={24} color={formData.verificationMethod === "SMS" ? "#001220" : "#E0E0E0"} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#E0E0E0] font-bold">휴대폰 본인인증 (SMS)</Text>
+                      <Text className="text-[#E0E0E0]/40 text-xs mt-1">문자로 발송된 인증번호 입력</Text>
+                    </View>
+                    {formData.verificationMethod === "SMS" && <CheckCircle2 size={24} color="#00E0D0" />}
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           ) : step === 3 ? (

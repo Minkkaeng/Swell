@@ -23,9 +23,8 @@ const LoginScreen = ({ navigation }: any) => {
       <View className="flex-1 px-8 justify-center">
         {/* Logo */}
         <View className="mb-10 pt-10">
-          <View className="w-16 h-16 bg-[#00E0D0] rounded-2xl items-center justify-center shadow-[0_0_20px_rgba(0,224,208,0.5)]">
-            <View className="w-8 h-[2px] bg-[#001220] rounded-full rotate-[15deg] absolute" style={{ top: "45%" }} />
-            <View className="w-8 h-[2px] bg-[#001220] rounded-full -rotate-[15deg] absolute" style={{ top: "55%" }} />
+          <View className="w-20 h-20 bg-[#00E0D0] rounded-[28px] items-center justify-center shadow-lg">
+            <WaveLogo size={42} color="#001220" />
           </View>
         </View>
 

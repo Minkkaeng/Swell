@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, Animated, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Animated, StyleSheet, Dimensions, Platform } from "react-native";
 import WaveLogo from "../components/WaveLogo";
 
 const { width } = Dimensions.get("window");
@@ -96,11 +96,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
-    shadowColor: "#00E0D0",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#00E0D0",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 10,
+      },
+      web: {
+        boxShadow: "0px 10px 20px rgba(0, 224, 208, 0.3)",
+      },
+    }),
   },
   logoText: {
     fontSize: 50,

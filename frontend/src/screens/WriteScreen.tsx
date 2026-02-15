@@ -11,7 +11,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { ArrowLeft, Send, Hash } from "lucide-react-native";
+import { ArrowLeft, Send, Hash, AlertCircle, ShieldAlert } from "lucide-react-native";
+import { Modal } from "react-native";
 import { api } from "../services/api";
 
 const CATEGORIES = ["고민", "일상", "위로", "감사", "질문"];
@@ -23,6 +24,7 @@ const WriteScreen = ({ navigation }: any) => {
   const [content, setContent] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("일상");
   const [isPosting, setIsPosting] = useState(false);
+  const [showGuide, setShowGuide] = useState(true); // 처음 진입 시 상시 노출
 
   const handlePost = async () => {
     if (!content.trim()) return;
@@ -110,6 +112,30 @@ const WriteScreen = ({ navigation }: any) => {
             </Text>
           </View>
         </ScrollView>
+
+        {/* Community Guidelines Modal */}
+        <Modal visible={showGuide} transparent={true} animationType="fade" onRequestClose={() => setShowGuide(false)}>
+          <View className="flex-1 bg-black/80 items-center justify-center p-8">
+            <View className="bg-[#002845] p-10 rounded-[40px] border border-[#00E0D0]/20 w-full items-center">
+              <View className="w-16 h-16 bg-[#00E0D0]/10 rounded-full items-center justify-center mb-6">
+                <ShieldAlert size={32} color="#00E0D0" />
+              </View>
+              <Text className="text-[#E0E0E0] text-xl font-bold mb-4 text-center">커뮤니티 가이드라인</Text>
+              <Text className="text-[#E0E0E0]/60 text-center leading-7 mb-8 text-sm">
+                너울은 모두가 편안하게 속마음을{"\n"}나눌 수 있는 공간입니다.{"\n\n"}
+                <Text className="text-[#00E0D0]">• 비방, 욕설, 타인에 대한 공격 금지{"\n"}</Text>
+                <Text className="text-[#00E0D0]">• 음란물 및 상업적 광고 게시 금지{"\n"}</Text>
+                <Text className="text-[#00E0D0]">• 개인정보 유출 주의</Text>
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowGuide(false)}
+                className="bg-[#00E0D0] py-4 px-10 rounded-2xl w-full items-center"
+              >
+                <Text className="text-[#001220] font-bold">확인했습니다</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

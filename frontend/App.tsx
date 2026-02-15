@@ -10,6 +10,9 @@ import IntroScreen from "./src/screens/IntroScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import WriteScreen from "./src/screens/WriteScreen";
 import PostDetailScreen from "./src/screens/PostDetailScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import SupportScreen from "./src/screens/SupportScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +34,9 @@ export default function App() {
         <Stack.Screen name="STT" component={STTScreen} />
         <Stack.Screen name="Write" component={WriteScreen} />
         <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
