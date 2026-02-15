@@ -8,8 +8,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { ArrowLeft, Send, Hash } from "lucide-react-native";
+import { api } from "../services/api";
 
 const CATEGORIES = ["고민", "일상", "위로", "감사", "질문"];
 
@@ -19,12 +22,26 @@ const CATEGORIES = ["고민", "일상", "위로", "감사", "질문"];
 const WriteScreen = ({ navigation }: any) => {
   const [content, setContent] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("일상");
+  const [isPosting, setIsPosting] = useState(false);
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!content.trim()) return;
-    // 실제 서버 전송 로직 지점
-    console.log("Posting:", { category: selectedCategory, content });
-    navigation.navigate("Home");
+
+    try {
+      setIsPosting(true);
+      await api.posts.create({
+        content,
+        // category: selectedCategory, // API 스펙에 있다면 추가
+        userId: "test-user-id", // 임시 유저 ID
+      });
+      Alert.alert("성공", "이야기가 너울에 담겼습니다.");
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "게시글 작성에 실패했습니다.");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -40,10 +57,10 @@ const WriteScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             onPress={handlePost}
-            disabled={!content.trim()}
-            className={`w-10 h-10 items-center justify-center ${!content.trim() ? "opacity-30" : ""}`}
+            disabled={!content.trim() || isPosting}
+            className={`w-10 h-10 items-center justify-center ${!content.trim() || isPosting ? "opacity-30" : ""}`}
           >
-            <Send size={24} color="#00E0D0" />
+            {isPosting ? <ActivityIndicator color="#00E0D0" size="small" /> : <Send size={24} color="#00E0D0" />}
           </TouchableOpacity>
         </View>
 

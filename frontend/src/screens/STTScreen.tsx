@@ -1,7 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import Waveform from "../components/Waveform";
 import { Mic, Square, ArrowLeft, Menu, AlertTriangle, ShieldCheck, Send } from "lucide-react-native";
+import { api } from "../services/api";
 
 /**
  * @description STT 입력 화면 (Midnight Calm 테마 적용)
@@ -9,6 +19,7 @@ import { Mic, Square, ArrowLeft, Menu, AlertTriangle, ShieldCheck, Send } from "
 const STTScreen = ({ navigation }: any) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("일상");
   const [showGuide, setShowGuide] = useState(false);
@@ -41,9 +52,24 @@ const STTScreen = ({ navigation }: any) => {
     }
   };
 
-  const handlePost = () => {
-    console.log("Posting from Voice:", { category: selectedCategory, content: recognizedText });
-    navigation.navigate("Home");
+  const handlePost = async () => {
+    if (!recognizedText.trim() || isPosting) return;
+
+    try {
+      setIsPosting(true);
+      await api.posts.create({
+        content: recognizedText,
+        // category: selectedCategory,
+        userId: "test-user-id",
+      });
+      Alert.alert("성공", "이야기가 너울에 담겼습니다.");
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "게시글 작성에 실패했습니다.");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -85,10 +111,18 @@ const STTScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           onPress={isReviewing ? handlePost : () => {}}
-          disabled={isReviewing && !recognizedText.trim()}
+          disabled={(isReviewing && !recognizedText.trim()) || isPosting}
           className="w-10 h-10 items-center justify-center"
         >
-          {isReviewing ? <Send size={24} color="#00E0D0" /> : <Menu size={28} color="#E0E0E0" />}
+          {isReviewing ? (
+            isPosting ? (
+              <ActivityIndicator color="#00E0D0" size="small" />
+            ) : (
+              <Send size={24} color="#00E0D0" />
+            )
+          ) : (
+            <Menu size={28} color="#E0E0E0" />
+          )}
         </TouchableOpacity>
       </View>
 

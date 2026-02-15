@@ -16,7 +16,8 @@ import {
   Mic,
   PenTool,
 } from "lucide-react-native";
-import { Modal, Alert, Animated } from "react-native";
+import { Modal, Alert, Animated, ActivityIndicator } from "react-native";
+import { api } from "../services/api";
 
 const CATEGORIES = ["전체", "고민", "일상", "위로", "감사", "질문"];
 
@@ -68,18 +69,38 @@ const HomeScreen = ({ navigation }: any) => {
 
   const filteredPosts = posts.filter((p) => selectedCategory === "전체" || p.category === selectedCategory);
 
-  const onRefresh = () => {
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.posts.get();
+      // API 응답 구조에 맞게 매핑 (기본적으로 posts 배열이 온다고 가정)
+      const mappedPosts = Array.isArray(data)
+        ? data.map((post: any) => ({
+            id: post.id?.toString() || post._id?.toString(),
+            category: post.category || "일상",
+            content: post.content,
+            time: post.createdAt ? "방금 전" : "1시간 전",
+            likes: post.likesCount || 0,
+            comments: post.commentsCount || 0,
+          }))
+        : [];
+      setPosts(mappedPosts.length > 0 ? mappedPosts : MOCK_POSTS); // 데이터가 없으면 Mock 유지
+    } catch (error) {
+      console.error(error);
+      // 오프라인 상태 등을 위해 MockPosts 유지
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      Alert.alert("파도가 정화되었습니다", "새로운 마음으로 이야기를 나눠보세요.");
-    }, 1500);
+    await fetchPosts();
+    setIsRefreshing(false);
   };
 
   React.useEffect(() => {
-    // 시뮬레이션 로딩 (Skeleton UI 연출용)
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
+    fetchPosts();
   }, []);
 
   const handleReport = (id: string) => {

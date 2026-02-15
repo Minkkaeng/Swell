@@ -8,8 +8,11 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { ArrowLeft, Heart, MessageSquare, Send, MoreHorizontal } from "lucide-react-native";
+import { api } from "../services/api";
 
 /**
  * @description 게시글 상세조회 및 댓글 작성 화면
@@ -17,21 +20,36 @@ import { ArrowLeft, Heart, MessageSquare, Send, MoreHorizontal } from "lucide-re
 const PostDetailScreen = ({ route, navigation }: any) => {
   const { post } = route.params;
   const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [comments, setComments] = useState([
     { id: "c1", user: "익명1", content: "정말 공감되는 글이에요. 힘내세요!", time: "5분 전" },
     { id: "c2", user: "익명2", content: "저도 비슷한 경험이 있는데, 시간이 해결해주더라고요.", time: "2분 전" },
   ]);
 
-  const handleAddComment = () => {
-    if (!comment.trim()) return;
-    const newComment = {
-      id: Date.now().toString(),
-      user: "나",
-      content: comment,
-      time: "방금 전",
-    };
-    setComments([...comments, newComment]);
-    setComment("");
+  const handleAddComment = async () => {
+    if (!comment.trim() || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const result = await api.comments.create(post.id, {
+        content: comment,
+        userId: "test-user-id",
+      });
+
+      const newComment = {
+        id: result.id?.toString() || Date.now().toString(),
+        user: "나",
+        content: comment,
+        time: "방금 전",
+      };
+      setComments([...comments, newComment]);
+      setComment("");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "댓글 작성에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -95,10 +113,10 @@ const PostDetailScreen = ({ route, navigation }: any) => {
             />
             <TouchableOpacity
               onPress={handleAddComment}
-              disabled={!comment.trim()}
-              className={`${!comment.trim() ? "opacity-20" : ""}`}
+              disabled={!comment.trim() || isSubmitting}
+              className={`${!comment.trim() || isSubmitting ? "opacity-20" : ""}`}
             >
-              <Send size={20} color="#00E0D0" />
+              {isSubmitting ? <ActivityIndicator color="#00E0D0" size="small" /> : <Send size={20} color="#00E0D0" />}
             </TouchableOpacity>
           </View>
         </View>
