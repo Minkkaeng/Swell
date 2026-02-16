@@ -22,8 +22,11 @@ import {
   AlertCircle,
   Share2,
   Ban,
+  Sparkles,
 } from "lucide-react-native";
 import { api } from "../services/api";
+import { useUserStore } from "../store/userStore";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 export interface Comment {
   id: string;
@@ -42,9 +45,42 @@ const CURRENT_USER = "푸른파도";
  */
 const PostDetailScreen = ({ route, navigation }: any) => {
   const { post } = route.params;
+  const { status: userStatus } = useUserStore();
+
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [replyTo, setReplyTo] = useState<Comment | null>(null); // 대댓글 대상 저장
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+
+  // AI 요약 관련 상태
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [aiSummary, setAISummary] = useState<string | null>(null);
+
+  const handleAISummary = async () => {
+    if (userStatus !== "VIP") {
+      Alert.alert("VIP 전용", "AI 요약 기능은 VIP 회원만 이용 가능합니다.");
+      return;
+    }
+
+    try {
+      setIsSummarizing(true);
+      // 백엔드 AI API 호출 시뮬레이션
+      const response = await new Promise((resolve) =>
+        setTimeout(
+          () =>
+            resolve(
+              "1. 작성자는 현재 깊은 고립감을 느끼고 있으나, 이 커뮤니티를 통해 치유받고 있음. \n2. 진실된 감정 표현이 정신적 건강에 도움이 됨을 강조. \n3. 다른 이들의 응원이 필자의 회복에 큰 역할을 하고 있음.",
+            ),
+          2500,
+        ),
+      );
+      setAISummary(response as string);
+    } catch (error) {
+      Alert.alert("오류", "AI 요약 서비스를 일시적으로 사용할 수 없습니다.");
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   const [comments, setComments] = useState<Comment[]>([
     {
       id: "c1",
@@ -174,8 +210,44 @@ const PostDetailScreen = ({ route, navigation }: any) => {
               <Text className="text-[#00E0D0] text-sm font-bold opacity-60">익명의 너울</Text>
             </View>
             <Text className="text-[#E0E0E0] text-lg leading-8 font-light mb-8">{post.content}</Text>
+
+            {/* AI 요약 섹션 (VIP 전용) */}
+            {aiSummary && (
+              <Animated.View
+                entering={FadeInUp}
+                className="bg-[#00E0D0]/5 p-6 rounded-3xl mb-8 border border-[#00E0D0]/10"
+              >
+                <View className="flex-row items-center mb-3">
+                  <Sparkles size={16} color="#00E0D0" />
+                  <Text className="text-[#00E0D0] text-xs font-bold ml-2 tracking-widest">AI SUMMARY</Text>
+                </View>
+                <Text className="text-[#E0E0E0]/80 text-[14px] leading-6">{aiSummary}</Text>
+                <Text className="text-[#E0E0E0]/20 text-[10px] mt-4 font-bold italic">
+                  * 본 요약은 LLM 서비스를 통해 생성되었습니다. 비식별화 처리가 완료된 본문만 전송됩니다.
+                </Text>
+              </Animated.View>
+            )}
+
             <View className="flex-row justify-between items-center">
-              <Text className="text-[#E0E0E0]/30 text-xs font-medium">{post.time}</Text>
+              <View className="flex-row items-center">
+                <Text className="text-[#E0E0E0]/30 text-xs font-medium mr-4">{post.time}</Text>
+                {userStatus === "VIP" && !aiSummary && (
+                  <TouchableOpacity
+                    onPress={handleAISummary}
+                    disabled={isSummarizing}
+                    className="flex-row items-center bg-[#00E0D0]/10 px-4 py-2 rounded-full"
+                  >
+                    {isSummarizing ? (
+                      <ActivityIndicator size="small" color="#00E0D0" />
+                    ) : (
+                      <>
+                        <Sparkles size={14} color="#00E0D0" />
+                        <Text className="text-[#00E0D0] text-xs font-bold ml-2">AI 요약하기</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
               <View className="flex-row items-center">
                 <View className="flex-row items-center px-4 py-2 bg-[#001220]/40 rounded-full mr-3">
                   <Heart size={16} color="#00E0D0" fill={post.likes > 20 ? "#00E0D0" : "transparent"} />

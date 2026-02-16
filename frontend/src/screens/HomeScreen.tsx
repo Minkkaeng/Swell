@@ -21,6 +21,7 @@ import {
 } from "lucide-react-native";
 import { Modal, Alert, Animated, ActivityIndicator } from "react-native";
 import { api } from "../services/api";
+import { useUserStore } from "../store/userStore";
 
 const CATEGORIES = ["전체", "고민", "일상", "위로", "감사", "질문"];
 
@@ -97,6 +98,40 @@ const HomeScreen = ({ navigation }: any) => {
   const [reportCounts, setReportCounts] = React.useState<Record<string, number>>({});
   const [hasError, setHasError] = React.useState(false);
   const [showMyPosts, setShowMyPosts] = React.useState(false); // 내 활동 필터 추가
+
+  const { status, tokensToday, useToken, addViewedPost, addTokenByAd } = useUserStore();
+
+  const handlePostPress = (post: Post) => {
+    if (status === "GUEST") {
+      if (addViewedPost()) {
+        navigation.navigate("PostDetail", { post });
+      } else {
+        Alert.alert("열람 제한", "비회원은 하루 3개까지만 열람 가능합니다. 더 많은 글을 보려면 로그인해 주세요.", [
+          { text: "로그인하러 가기", onPress: () => navigation.replace("Login") },
+          { text: "취소", style: "cancel" },
+        ]);
+      }
+    } else if (status === "USER") {
+      if (useToken()) {
+        navigation.navigate("PostDetail", { post });
+      } else {
+        Alert.alert("토큰 부족", "오늘의 열람 토큰을 모두 사용했습니다. 광고를 시청하고 1개를 충전하시겠습니까?", [
+          {
+            text: "광고 시청",
+            onPress: () => {
+              // 광고 시청 시뮬레이션
+              Alert.alert("알림", "광고 시청이 완료되었습니다. 토킹 1개가 충전되었습니다.");
+              addTokenByAd();
+            },
+          },
+          { text: "취소", style: "cancel" },
+        ]);
+      }
+    } else {
+      // VIP는 무제한
+      navigation.navigate("PostDetail", { post });
+    }
+  };
 
   const filteredPosts = posts.filter((p) => {
     const isCategoryMatch = selectedCategory === "전체" || p.category === selectedCategory;
@@ -323,7 +358,7 @@ const HomeScreen = ({ navigation }: any) => {
             renderItem={({ item }: { item: Post }) => (
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => navigation.navigate("PostDetail", { post: item })}
+                onPress={() => handlePostPress(item)}
                 className="bg-[#002845]/40 p-8 rounded-[40px] mb-6 border border-white/5 shadow-sm active:scale-95 transition-transform"
               >
                 <View className="flex-row justify-between items-start mb-6">
