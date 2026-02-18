@@ -63,17 +63,19 @@ const PostDetailScreen = ({ route, navigation }: any) => {
 
     try {
       setIsSummarizing(true);
-      // 백엔드 AI API 호출 시뮬레이션
-      const response = await new Promise((resolve) =>
-        setTimeout(
-          () =>
-            resolve(
-              "1. 작성자는 현재 깊은 고립감을 느끼고 있으나, 이 커뮤니티를 통해 치유받고 있음. \n2. 진실된 감정 표현이 정신적 건강에 도움이 됨을 강조. \n3. 다른 이들의 응원이 필자의 회복에 큰 역할을 하고 있음.",
-            ),
-          2500,
-        ),
-      );
-      setAISummary(response as string);
+      // 백엔드 AI 요약 API 호출
+      const response = await fetch("http://localhost:3000/api/ai/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: post.content }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setAISummary(data.summary);
+      } else {
+        throw new Error("API failed");
+      }
     } catch (error) {
       Alert.alert("오류", "AI 요약 서비스를 일시적으로 사용할 수 없습니다.");
     } finally {

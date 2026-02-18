@@ -134,7 +134,7 @@ const RegisterScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => setFormData({ ...formData, socialPlatform: "kakao", isSocialLinked: true })}
-                  className={`flex-row items-center p-6 rounded-3xl border mb-4 ${
+                  className={`flex-row items-center px-6 h-[60px] rounded-3xl border mb-4 ${
                     formData.socialPlatform === "kakao"
                       ? "bg-[#FEE500] border-[#FEE500]"
                       : "bg-[#002845]/60 border-white/10"
@@ -158,7 +158,7 @@ const RegisterScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => setFormData({ ...formData, socialPlatform: "google", isSocialLinked: true })}
-                  className={`flex-row items-center p-6 rounded-3xl border ${
+                  className={`flex-row items-center px-6 h-[60px] rounded-3xl border ${
                     formData.socialPlatform === "google" ? "bg-white border-white" : "bg-[#002845]/60 border-white/10"
                   }`}
                 >
@@ -251,7 +251,7 @@ const RegisterScreen = ({ navigation }: any) => {
             activeOpacity={0.8}
             onPress={handleNext}
             disabled={!isStepValid()}
-            className={`h-16 rounded-[24px] items-center justify-center shadow-lg ${
+            className={`h-[60px] rounded-[24px] items-center justify-center shadow-lg ${
               isStepValid() ? "bg-[#00E0D0]" : "bg-[#002845] opacity-50"
             }`}
           >

@@ -189,7 +189,7 @@ const LoginScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleSocialLogin("kakao")}
-                className="bg-[#FEE500] h-16 rounded-2xl flex-row items-center justify-center shadow-md mb-4"
+                className="bg-[#FEE500] h-[60px] rounded-2xl flex-row items-center justify-center shadow-md mb-4"
               >
                 <View className="w-6 h-6 items-center justify-center mr-2">
                   {/* <Text className="font-bold text-[#191919]">K</Text> */}
@@ -200,7 +200,7 @@ const LoginScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleSocialLogin("google")}
-                className="bg-white h-16 rounded-2xl flex-row items-center justify-center shadow-md"
+                className="bg-white h-[60px] rounded-2xl flex-row items-center justify-center shadow-md"
               >
                 <View className="w-6 h-6 items-center justify-center mr-2">
                   {/* <Text className="font-bold text-[#191919]">G</Text> */}
@@ -261,7 +261,7 @@ const LoginScreen = ({ navigation }: any) => {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleVerifyAge}
-              className="bg-[#00E0D0] h-16 rounded-2xl items-center justify-center shadow-lg"
+              className="bg-[#00E0D0] h-[60px] rounded-2xl items-center justify-center shadow-lg"
             >
               <Text className="text-[#001220] text-lg font-bold">인증 완료</Text>
             </TouchableOpacity>
@@ -319,7 +319,7 @@ const LoginScreen = ({ navigation }: any) => {
               <Animated.View style={{ opacity: buttonFadeAnim, width: "100%" }}>
                 <TouchableOpacity
                   onPress={handleConfirmAdult}
-                  className="bg-[#00E0D0] h-16 rounded-2xl items-center justify-center shadow-lg"
+                  className="bg-[#00E0D0] h-[60px] rounded-2xl items-center justify-center shadow-lg"
                 >
                   <Text className="text-[#001220] text-lg font-bold">확인 및 입장하기</Text>
                 </TouchableOpacity>

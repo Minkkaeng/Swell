@@ -12,12 +12,16 @@ import {
   Waves,
   Heart,
   User,
+  Gem,
+  Coins,
 } from "lucide-react-native";
+import { useUserStore } from "../store/userStore";
 
 /**
  * @description 프로필 및 계정 설정 화면
  */
 const ProfileScreen = ({ navigation }: any) => {
+  const { status, dailyTokens } = useUserStore();
   const [nickname, setNickname] = useState("푸른파도");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
@@ -75,7 +79,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
       <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
         {/* Profile Identity Section */}
-        <View className="items-center mt-10 mb-12">
+        <View className="items-center mt-10 mb-8">
           <View className="relative">
             <TouchableOpacity
               onPress={handlePickImage}
@@ -107,6 +111,32 @@ const ProfileScreen = ({ navigation }: any) => {
             <View className="bg-[#00E0D0]/10 px-3 py-1 rounded-full flex-row items-center mt-3">
               <ShieldCheck size={12} color="#00E0D0" />
               <Text className="text-[#00E0D0] text-[10px] font-bold ml-1.5 tracking-tighter">본인인증 완료</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Assets Dashboard */}
+        <View className="bg-[#002845]/60 p-6 rounded-[35px] border border-[#00E0D0]/20 mb-10 flex-row justify-between items-center">
+          <View className="flex-row items-center">
+            <View className="w-12 h-12 bg-[#00E0D0]/10 rounded-2xl items-center justify-center">
+              <Gem size={24} color="#00E0D0" />
+            </View>
+            <View className="ml-4">
+              <Text className="text-[#E0E0E0]/40 text-[10px] font-bold mb-1">토큰 잔액</Text>
+              <Text className="text-white text-xl font-bold">{status === "VIP" ? "무제한" : dailyTokens}</Text>
+            </View>
+          </View>
+
+          <View className="items-end">
+            <Text className="text-[#E0E0E0]/40 text-[10px] font-bold mb-1">멤버십 등급</Text>
+            <View
+              className={`px-3 py-1 rounded-full border ${
+                status === "VIP" ? "bg-[#A78BFA]/10 border-[#A78BFA]/30" : "bg-white/5 border-white/10"
+              }`}
+            >
+              <Text className={`text-[11px] font-bold ${status === "VIP" ? "text-[#A78BFA]" : "text-[#E0E0E0]/60"}`}>
+                {status === "VIP" ? "PREMIUM VIP" : "STANDARD"}
+              </Text>
             </View>
           </View>
         </View>

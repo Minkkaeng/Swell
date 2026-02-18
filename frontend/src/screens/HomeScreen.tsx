@@ -18,10 +18,32 @@ import {
   ArrowLeft,
   HelpCircle,
   ShieldAlert,
+  Coins,
+  Gem,
+  CheckCircle2,
+  ChevronRight,
 } from "lucide-react-native";
 import { Modal, Alert, Animated, ActivityIndicator } from "react-native";
 import { api } from "../services/api";
 import { useUserStore } from "../store/userStore";
+
+const StoreItem = ({ icon, title, price, onPress }: any) => (
+  <TouchableOpacity
+    onPress={onPress}
+    className="flex-row items-center justify-between p-5 bg-[#002845]/60 rounded-3xl border border-white/5 mb-3"
+  >
+    <View className="flex-row items-center">
+      <View className="w-12 h-12 bg-white/5 rounded-2xl items-center justify-center">{icon}</View>
+      <View className="ml-4">
+        <Text className="text-white font-bold">{title}</Text>
+        <Text className="text-[#00E0D0] text-[10px] mt-1">즉시 충전</Text>
+      </View>
+    </View>
+    <View className="bg-[#00E0D0] px-4 py-2 rounded-xl">
+      <Text className="text-[#001220] font-bold text-xs">{price}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
 const CATEGORIES = ["전체", "고민", "일상", "위로", "감사", "질문"];
 
@@ -99,7 +121,9 @@ const HomeScreen = ({ navigation }: any) => {
   const [hasError, setHasError] = React.useState(false);
   const [showMyPosts, setShowMyPosts] = React.useState(false); // 내 활동 필터 추가
 
-  const { status, tokensToday, useToken, addViewedPost, addTokenByAd } = useUserStore();
+  const { status, dailyFreeTokens, totalTokens, useToken, addViewedPost, addTokenByAd, buyTokens, upgradeToVIP } =
+    useUserStore();
+  const [showStore, setShowStore] = React.useState(false);
 
   const handlePostPress = (post: Post) => {
     if (status === "GUEST") {
@@ -115,12 +139,15 @@ const HomeScreen = ({ navigation }: any) => {
       if (useToken()) {
         navigation.navigate("PostDetail", { post });
       } else {
-        Alert.alert("토큰 부족", "오늘의 열람 토큰을 모두 사용했습니다. 광고를 시청하고 1개를 충전하시겠습니까?", [
+        Alert.alert("토큰 부족", "오늘의 열람 토큰을 모두 사용했습니다. 상점에서 충전하시겠습니까?", [
           {
-            text: "광고 시청",
+            text: "상점 가기",
+            onPress: () => setShowStore(true),
+          },
+          {
+            text: "광고로 1개 충전",
             onPress: () => {
-              // 광고 시청 시뮬레이션
-              Alert.alert("알림", "광고 시청이 완료되었습니다. 토킹 1개가 충전되었습니다.");
+              Alert.alert("알림", "광고 시청이 완료되었습니다. 토큰 1개가 충전되었습니다.");
               addTokenByAd();
             },
           },
@@ -284,14 +311,24 @@ const HomeScreen = ({ navigation }: any) => {
             )}
           </View>
 
-          {/* Center: Title */}
+          {/* Center: Title & Tokens */}
           <View className="items-center">
             <Text className="text-[#E0E0E0]/50 text-[10px] font-bold tracking-[3px] mb-1">
               {showMyPosts ? "MY ACTIVITY" : "FEBRUARY 14"}
             </Text>
-            <Text className="text-[#E0E0E0] text-2xl font-bold tracking-tight">
-              {showMyPosts ? "내가 담은 파도" : "당신의 너울"}
-            </Text>
+            <TouchableOpacity onPress={() => setShowStore(true)} className="flex-row items-center">
+              <Text className="text-[#E0E0E0] text-2xl font-bold tracking-tight">
+                {showMyPosts ? "내가 담은 파도" : "당신의 너울"}
+              </Text>
+              {status !== "GUEST" && (
+                <View className="ml-2 bg-[#00E0D0]/10 px-2 py-1 rounded-lg flex-row items-center border border-[#00E0D0]/20">
+                  <Gem size={12} color="#00E0D0" />
+                  <Text className="text-[#00E0D0] text-[10px] font-bold ml-1">
+                    {status === "VIP" ? "VIP" : dailyFreeTokens + totalTokens}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Right Side: Menu Button */}
@@ -502,12 +539,114 @@ const HomeScreen = ({ navigation }: any) => {
                       </Text>
                     </TouchableOpacity>
                   ))}
+                  {/* VIP 배너 */}
+                  {status !== "VIP" && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowMenu(false);
+                        setShowStore(true);
+                      }}
+                      className="mt-6 p-6 rounded-[32px] bg-gradient-to-br from-[#00E0D0] to-[#00A89C] items-center relative overflow-hidden"
+                      style={{ backgroundColor: "#00E0D0" }}
+                    >
+                      <View className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full" />
+                      <Gem size={32} color="#001220" />
+                      <Text className="text-[#001220] font-bold text-lg mt-2">VIP 멤버십</Text>
+                      <Text className="text-[#001220]/60 text-xs mt-1 text-center">
+                        광고 제거 및{"\n"}무제한 파도 즐기기
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 <View className="mt-auto items-center pb-8 border-t border-white/5 pt-8">
                   <Text className="text-[#E0E0E0]/20 text-[10px] tracking-[2px]">SWELL v1.0.0</Text>
                 </View>
               </SafeAreaView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Token Store Modal */}
+        <Modal visible={showStore} transparent={true} animationType="slide" onRequestClose={() => setShowStore(false)}>
+          <View className="flex-1 justify-end bg-black/60">
+            <View className="bg-[#001220] rounded-t-[40px] p-8 border-t border-white/10" style={{ height: "80%" }}>
+              <View className="flex-row justify-between items-center mb-8">
+                <View>
+                  <Text className="text-white text-2xl font-bold">너울 상점</Text>
+                  <Text className="text-[#E0E0E0]/40 text-sm mt-1">파도를 더 깊이 탐험해 보세요</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowStore(false)}
+                  className="w-10 h-10 items-center justify-center bg-white/5 rounded-full"
+                >
+                  <X size={20} color="#E0E0E0" />
+                </TouchableOpacity>
+              </View>
+
+              <View className="bg-[#002845]/40 p-6 rounded-3xl border border-[#00E0D0]/20 flex-row justify-between items-center mb-10">
+                <View>
+                  <Text className="text-[#E0E0E0]/50 text-xs font-bold mb-1">현재 내 토큰</Text>
+                  <View className="flex-row items-center">
+                    <Gem size={20} color="#00E0D0" />
+                    <Text className="text-white text-2xl font-bold ml-2">
+                      {status === "VIP" ? "무제한" : dailyFreeTokens + totalTokens}
+                    </Text>
+                  </View>
+                </View>
+                {status !== "VIP" && (
+                  <View className="items-end">
+                    <Text className="text-[#E0E0E0]/30 text-[10px]">일일 무료 10개 포함</Text>
+                    <Text className="text-[#00E0D0] text-xs font-bold mt-1">충전 시 광고 제거 (예정)</Text>
+                  </View>
+                )}
+              </View>
+
+              <View className="space-y-4 mb-8">
+                <Text className="text-[#E0E0E0]/60 font-bold ml-1 mb-2">토큰 충전</Text>
+                <StoreItem
+                  icon={<Coins size={24} color="#FFD700" />}
+                  title="토큰 30개"
+                  price="₩1,100"
+                  onPress={() => {
+                    buyTokens(30);
+                    Alert.alert("구매 완료", "토큰 30개가 충전되었습니다.");
+                  }}
+                />
+                <StoreItem
+                  icon={<Gem size={24} color="#00E0D0" />}
+                  title="토큰 100개"
+                  price="₩3,300"
+                  onPress={() => {
+                    buyTokens(100);
+                    Alert.alert("구매 완료", "토큰 100개가 충전되었습니다.");
+                  }}
+                />
+                <StoreItem
+                  icon={<CheckCircle2 size={24} color="#A78BFA" />}
+                  title="월 정기 VIP (무제한)"
+                  price="₩5,500 / 월"
+                  onPress={() => {
+                    upgradeToVIP();
+                    Alert.alert("승급 완료", "VIP 멤버십이 활성화되었습니다!");
+                    setShowStore(false);
+                  }}
+                />
+                <Text className="text-[#E0E0E0]/30 text-[10px] px-4 leading-4">
+                  * VIP 사용자는 게시글 무제한 열람 및 전용 AI 요약 기능을 이용할 수 있습니다.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  addTokenByAd();
+                  Alert.alert("알림", "광고 시청 후 1개 토큰이 충전되었습니다.");
+                }}
+                disabled={status === "VIP"}
+                className={`flex-row items-center justify-center p-5 rounded-2xl border border-white/5 ${status === "VIP" ? "opacity-20" : "bg-white/5"}`}
+              >
+                <Text className="text-[#E0E0E0]/50 font-bold">광고 보고 1개 충전하기</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
