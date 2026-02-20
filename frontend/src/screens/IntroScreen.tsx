@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Animated, StyleSheet, Dimensions, Platform } from "react-native";
 import WaveLogo from "../components/WaveLogo";
+import { useUserStore } from "../store/userStore";
+import { THEMES } from "../styles/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -11,6 +13,7 @@ const IntroScreen = ({ navigation }: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const { status, appTheme } = useUserStore();
 
   useEffect(() => {
     // 인트로 애니메이션 시퀀스
@@ -18,33 +21,47 @@ const IntroScreen = ({ navigation }: any) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 2000,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 8,
         tension: 40,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 1500,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
     ]).start();
 
-    // 3.5초 후 로그인 화면으로 이동
+    // 3.5초 후 상태에 따라 이동
     const timer = setTimeout(() => {
-      navigation.replace("Login");
+      // 최신 상태를 직접 getState()로 가져와서 rehydration 대응
+      const { status, userId, hasSeenGuide } = useUserStore.getState();
+
+      // status가 USER이고 userId가 존재해야 로그인된 것으로 간주
+      if (status === "USER" && userId) {
+        if (hasSeenGuide) {
+          navigation.replace("Home");
+        } else {
+          // 가이드를 안 본 경우 가이드로
+          navigation.replace("Guide");
+        }
+      } else {
+        // 그 외 모든 경우(GUEST, userId 없음 등)는 로그인 화면으로
+        navigation.replace("Login");
+      }
     }, 3500);
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: THEMES[appTheme].bg }]}>
       {/* Decorative Glow */}
-      <View style={styles.glow} />
+      <View style={[styles.glow, { backgroundColor: THEMES[appTheme].accent + "0D" }]} />
 
       <Animated.View
         style={[
@@ -55,8 +72,8 @@ const IntroScreen = ({ navigation }: any) => {
           },
         ]}
       >
-        <View style={styles.logoContainer}>
-          <WaveLogo size={60} color="#001220" />
+        <View style={[styles.logoContainer, { backgroundColor: THEMES[appTheme].accent }]}>
+          <WaveLogo size={60} color={THEMES[appTheme].bg} />
         </View>
         <Text style={styles.brandName}>너울</Text>
         <Text style={styles.slogan}>진심이 파도처럼 밀려오는 곳</Text>

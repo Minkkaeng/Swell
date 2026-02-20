@@ -4,6 +4,10 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      screens: {
+        s24: "411px", // 갤럭시 S24+ 및 대화면 기기 기준
+        tablet: "768px",
+      },
       colors: {
         midnight: {
           background: "#001220",
