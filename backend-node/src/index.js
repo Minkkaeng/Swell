@@ -105,6 +105,7 @@ const mockUsers = [
         comments: 56,
       },
     ],
+    socialId: "kakao_test_user", // 테스트용 소셜 ID 추가
   },
 ];
 
@@ -176,6 +177,7 @@ const mockPosts = [
 
 // 1. 게시글 목록 조회
 app.get("/api/posts", (req, res) => {
+  console.log("API: GET /api/posts hit");
   res.status(200).json({ success: true, posts: mockPosts });
 });
 
@@ -296,6 +298,15 @@ app.delete("/api/comments/:id", (req, res) => {
 // 6. 소셜 로그인 (실제 OAuth 연동)
 app.post("/api/auth/social", async (req, res) => {
   const { platform, code, redirectUri } = req.body;
+  console.log(`API: POST /api/auth/social hit (Platform: ${platform}, Code: ${code})`);
+
+  // [개발용 테스트 바이패스]
+  // 'test_code'로 요청하면 real OAuth를 건너뛰고 테스트 계정으로 로그인 처리
+  if (code === "test_code") {
+    console.log("API: Test login bypass activated");
+    const testUser = mockUsers.find((u) => u.socialId === "kakao_test_user");
+    return res.status(200).json({ success: true, user: testUser });
+  }
 
   if (!code || !redirectUri) {
     return res.status(400).json({ success: false, message: "잘못된 요청: Auth Code나 Redirect URI가 누락되었습니다." });
@@ -461,6 +472,14 @@ app.delete("/api/users/:id", (req, res) => {
   } else {
     res.status(404).json({ success: false, message: "사용자를 찾을 수 없습니다." });
   }
+});
+
+// 13. STT (Mock)
+app.post("/api/stt", (req, res) => {
+  res.status(200).json({
+    success: true,
+    text: "오늘 하루는 정말 긴 파도 같았어요. 힘든 일이 많았지만 이렇게 너울에게 털어놓으니 조금은 마음이 가벼워지는 것 같아요.",
+  });
 });
 
 app.listen(PORT, () => {

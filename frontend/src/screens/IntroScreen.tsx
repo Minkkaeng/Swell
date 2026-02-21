@@ -43,6 +43,9 @@ const IntroScreen = ({ navigation }: any) => {
 
       // status가 USER이고 userId가 존재해야 로그인된 것으로 간주
       if (status === "USER" && userId) {
+        console.log(
+          `[Intro] Auth detected: status=${status}, userId=${userId}. Navigating to ${hasSeenGuide ? "Home" : "Guide"}`,
+        );
         if (hasSeenGuide) {
           navigation.replace("Home");
         } else {
@@ -50,6 +53,7 @@ const IntroScreen = ({ navigation }: any) => {
           navigation.replace("Guide");
         }
       } else {
+        console.log(`[Intro] No auth detected: status=${status}, userId=${userId}. Navigating to Login`);
         // 그 외 모든 경우(GUEST, userId 없음 등)는 로그인 화면으로
         navigation.replace("Login");
       }

@@ -6,27 +6,32 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#001220"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.minkkaeng.swell",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#001220"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "baseUrl": ""
+    },
+    "extra": {
+      "eas": {
+        "projectId": "74eebd47-938f-4a83-addb-e549de61d3e5"
+      }
     }
   }
 }

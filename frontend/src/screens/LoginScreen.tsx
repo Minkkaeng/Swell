@@ -51,6 +51,7 @@ const LoginScreen = ({ navigation }: any) => {
     if (kakaoResponse?.type === "success" && kakaoResponse.params.code) {
       handleAuthComplete("kakao", kakaoResponse.params.code);
     } else if (kakaoResponse?.type === "error") {
+      console.log("[Kakao Auth Error]", kakaoResponse.error);
       Alert.alert("로그인 실패", kakaoResponse.error?.message || "카카오 로그인에 실패했습니다.");
     }
   }, [kakaoResponse]);
@@ -171,6 +172,21 @@ const LoginScreen = ({ navigation }: any) => {
               <Text className="text-[#191919] text-xl font-bold">카카오톡 로그인</Text>
             )}
           </TouchableOpacity>
+
+          {/* 개발용 테스트 로그인 버튼 */}
+          {__DEV__ && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleAuthComplete("test", "test_code")}
+              disabled={isLoggingIn}
+              style={{ borderColor: THEMES[appTheme].accent, borderStyle: "dashed" }}
+              className="h-[60px] rounded-[28px] flex-row items-center justify-center border mb-10"
+            >
+              <Text style={{ color: THEMES[appTheme].accent }} className="text-lg font-bold">
+                [Dev] API 연결 테스트 (Bypass)
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             activeOpacity={0.8}
