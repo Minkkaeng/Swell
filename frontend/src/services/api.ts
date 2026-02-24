@@ -184,12 +184,12 @@ export const api = {
 
   // 인증 관련
   auth: {
-    socialLogin: async (provider: string, accessToken: string, redirectUri: string, isAccessToken?: boolean) => {
+    socialLogin: async (provider: string, code: string, redirectUri: string) => {
       try {
         const response = await fetch(`${BASE_URL}/api/auth/social`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ provider, code: accessToken, redirectUri, isAccessToken }),
+          body: JSON.stringify({ provider, code, redirectUri }),
         });
         return await response.json();
       } catch (error) {

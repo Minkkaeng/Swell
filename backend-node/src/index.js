@@ -297,22 +297,19 @@ app.delete("/api/comments/:id", (req, res) => {
 
 // 6. 소셜 로그인 (실제 OAuth 연동)
 app.post("/api/auth/social", async (req, res) => {
-  const { platform, code, redirectUri, isAccessToken, accessToken } = req.body;
-  const actualCode = code || accessToken; // 호환성 유지
-
-  console.log(
-    `API: POST /api/auth/social hit (Platform: ${platform}, Code/Token: ${actualCode}, isAccessToken: ${isAccessToken})`,
-  );
+  const { provider, platform, code, redirectUri } = req.body;
+  const activePlatform = provider || platform;
+  console.log(`API: POST /api/auth/social hit (Platform: ${activePlatform}, Code: ${code})`);
 
   // [개발용 테스트 바이패스]
   // 'test_code'로 요청하면 real OAuth를 건너뛰고 테스트 계정으로 로그인 처리
-  if (actualCode === "test_code") {
+  if (code === "test_code") {
     console.log("API: Test login bypass activated");
     const testUser = mockUsers.find((u) => u.socialId === "kakao_test_user");
     return res.status(200).json({ success: true, user: testUser });
   }
 
-  if (!actualCode || !redirectUri) {
+  if (!code || !redirectUri) {
     return res.status(400).json({ success: false, message: "잘못된 요청: Auth Code나 Redirect URI가 누락되었습니다." });
   }
 
@@ -320,79 +317,46 @@ app.post("/api/auth/social", async (req, res) => {
     let socialId = null;
     let socialNickname = null;
 
-    if (platform === "kakao") {
-      const kakaoId = process.env.KAKAO_CLIENT_ID;
-      const kakaoSecret = process.env.KAKAO_CLIENT_SECRET;
-
-      if (!kakaoId || !kakaoSecret) {
-        throw new Error("Missing Kakao Client ID or Secret in environment variables");
-      }
-
-      console.log(`Exchanging Kakao code for token. Redirect URI: ${redirectUri}`);
+    if (activePlatform === "kakao") {
       // 1. 카카오 토큰 발급
       const tokenResponse = await axios.post("https://kauth.kakao.com/oauth/token", null, {
         params: {
           grant_type: "authorization_code",
-          client_id: kakaoId,
-          client_secret: kakaoSecret,
+          client_id: process.env.KAKAO_CLIENT_ID,
+          client_secret: process.env.KAKAO_CLIENT_SECRET, // 선택이나 제공됨
           redirect_uri: redirectUri,
-          code: actualCode,
+          code: code,
         },
         headers: {
           "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
         },
       });
-      const kakaoAccessToken = tokenResponse.data.access_token;
+      const accessToken = tokenResponse.data.access_token;
 
       // 2. 카카오 사용자 정보 조회
       const userResponse = await axios.get("https://kapi.kakao.com/v2/user/me", {
         headers: {
-          Authorization: `Bearer ${kakaoAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
         },
       });
       socialId = `kakao_${userResponse.data.id}`;
       socialNickname = userResponse.data.kakao_account?.profile?.nickname || "카카오유저";
-    } else if (platform === "google") {
-      let googleAccessToken = actualCode;
-
-      if (!isAccessToken) {
-        // 기존 APK(안드로이드 클라이언트 ID로 생성된 코드)와의 호환성을 위해 안드로이드 클라이언트 ID 고정 사용
-        const googleId = process.env.GOOGLE_ANDROID_CLIENT_ID; // 안드로이드 Client ID
-        const googleSecret = ""; // 안드로이드 클라이언트는 시크릿을 전송하지 않음
-
-        if (!googleId) {
-          throw new Error("Missing Google Android Client ID in environment variables");
-        }
-
-        console.log(`Exchanging Google code for token using Android Client ID. Redirect URI: ${redirectUri}`);
-        // 1. 구글 토큰 발급
-        const params = new URLSearchParams();
-        params.append("grant_type", "authorization_code");
-        params.append("client_id", googleId);
-        // 안드로이드 클라이언트는 client_secret 파라미터 자체를 생략
-        params.append("redirect_uri", redirectUri);
-        params.append("code", actualCode);
-
-        try {
-          const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", params, {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          });
-          googleAccessToken = tokenResponse.data.access_token;
-        } catch (tokenError) {
-          console.error("Google Token Exchange Failed:", tokenError.response?.data || tokenError.message);
-          return res.status(400).json({ success: false, message: "Google 토큰 교환에 실패했습니다." });
-        }
-      } else {
-        console.log("Using Google Access Token directly.");
-      }
+    } else if (activePlatform === "google") {
+      // 1. 구글 토큰 발급
+      const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", {
+        grant_type: "authorization_code",
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        code: code,
+      });
+      const accessToken = tokenResponse.data.access_token;
 
       // 2. 구글 사용자 정보 조회
       const userResponse = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: {
-          Authorization: `Bearer ${googleAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       socialId = `google_${userResponse.data.id}`;
@@ -419,7 +383,7 @@ app.post("/api/auth/social", async (req, res) => {
         socialData: {
           socialId: socialId,
           nickname: socialNickname,
-          platform: platform,
+          platform: activePlatform,
         },
       });
     }

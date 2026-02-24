@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  Dimensions,
-  Alert,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Dimensions, Alert } from "react-native";
 import { CheckSquare, Square, X, MessageCircle, Waves } from "lucide-react-native";
 import WaveLogo from "../components/WaveLogo";
 import { useGlobalLoader } from "../hooks/useGlobalLoader";
@@ -22,8 +13,8 @@ WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get("window");
 
-// Web/모바일 공통 리다이렉트 URI - 도메인이 없으므로 앱 전용 커스텀 스킴을 사용합니다.
-const redirectUri = "com.kakao.swell://oauth";
+// Web/모바일 호환 리다이렉트 URI (EXPO_PUBLIC_ 으로 관리)
+const redirectUri = AuthSession.makeRedirectUri();
 
 /**
  * @description 소셜 로그인 연동 중심의 로그인 화면
@@ -34,38 +25,30 @@ const LoginScreen = ({ navigation }: any) => {
   const { startLoading, stopLoading } = useGlobalLoader();
   const { setStatus, setUserId, setNickname, nickname, hasSeenGuide, appTheme } = useUserStore();
 
-  // 카카오 로그인 요청 설정 (EAS 빌드 시 Env 누락 방지를 위해 하드코딩)
-  const kakaoClientId = "7e2f717aefae50a930bee02a30fddfa6";
+  // 카카오 로그인 요청 설정
   const [kakaoRequest, kakaoResponse, promptKakaoAsync] = AuthSession.useAuthRequest(
     {
-      clientId: kakaoClientId,
+      clientId: process.env.EXPO_PUBLIC_KAKAO_CLIENT_ID || "",
       scopes: ["profile_nickname"],
       redirectUri,
       responseType: "code",
-      usePKCE: false,
     },
     { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" },
   );
 
-  // 구글 로그인 요청 설정 - Android ID사용 시 PKCE를 꺼야 400 에러가 안 납니다.
-  const googleClientId =
-    Platform.OS === "android"
-      ? "513397388595-dlidj2c1pcah9v1nq7pkh4vd79fnab3e.apps.googleusercontent.com"
-      : "513397388595-j7b66asn9ohvsle2co31st0s6lk22ev6.apps.googleusercontent.com";
-
+  // 구글 로그인 요청 설정
   const [googleRequest, googleResponse, promptGoogleAsync] = AuthSession.useAuthRequest(
     {
-      clientId: googleClientId,
-      scopes: ["openid", "profile", "email"],
+      clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "",
+      scopes: ["profile", "email"],
       redirectUri,
-      responseType: "token", // 코드가 아닌 토큰을 직접 받아옵니다.
+      responseType: "code",
     },
     { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" },
   );
 
   useEffect(() => {
     if (kakaoResponse?.type === "success" && kakaoResponse.params.code) {
-      // 프론트엔드에서 직접 토큰을 발급받지 않고, 백엔드에 코드를 전송함
       handleAuthComplete("kakao", kakaoResponse.params.code);
     } else if (kakaoResponse?.type === "error") {
       console.log("[Kakao Auth Error]", kakaoResponse.error);
@@ -74,8 +57,8 @@ const LoginScreen = ({ navigation }: any) => {
   }, [kakaoResponse]);
 
   useEffect(() => {
-    if (googleResponse?.type === "success" && googleResponse.params.access_token) {
-      handleAuthComplete("google", googleResponse.params.access_token, true); // 구글은 토큰을 직접 전송
+    if (googleResponse?.type === "success" && googleResponse.params.code) {
+      handleAuthComplete("google", googleResponse.params.code);
     } else if (googleResponse?.type === "error") {
       Alert.alert("로그인 실패", googleResponse.error?.message || "Google 로그인에 실패했습니다.");
     }
@@ -85,26 +68,9 @@ const LoginScreen = ({ navigation }: any) => {
    * @description 소셜 로그인 버튼 클릭 시 실행
    */
   const handleSocialLogin = async (platform: string) => {
-    // Web 환경에서 HTTPS가 아닌 경우 경고
-    if (Platform.OS === "web" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-      Alert.alert(
-        "보안 오류",
-        "소셜 로그인은 HTTPS 환경 또는 localhost에서만 작동합니다. '--tunnel' 모드로 실행하거나 PC에서 테스트해주세요.",
-      );
-      return;
-    }
-
     if (platform === "kakao") {
-      if (!kakaoRequest) {
-        Alert.alert("준비 중", "카카오 인증 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
       await promptKakaoAsync();
     } else if (platform === "google") {
-      if (!googleRequest) {
-        Alert.alert("준비 중", "구글 인증 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
       await promptGoogleAsync();
     }
   };
@@ -112,12 +78,12 @@ const LoginScreen = ({ navigation }: any) => {
   /**
    * @description 실제 인증 코드 백엔드 전송
    */
-  const handleAuthComplete = async (provider: string, accessToken: string, isAccessToken?: boolean) => {
+  const handleAuthComplete = async (provider: string, code: string) => {
     try {
       setIsLoggingIn(true);
       startLoading(500);
 
-      const response = await api.auth.socialLogin(provider, accessToken, redirectUri, isAccessToken);
+      const response = await api.auth.socialLogin(provider, code, redirectUri);
 
       if (response.success && response.user) {
         setStatus(response.user.status || "USER");
@@ -135,8 +101,14 @@ const LoginScreen = ({ navigation }: any) => {
           navigation.replace("Guide");
         }
       } else if (response.error === "NOT_REGISTERED") {
-        // 알림 창을 띄우지 않고, 마치 다음 단계처럼 자연스럽게 회원가입(약관) 화면으로 부드럽게 이동합니다.
-        navigation.navigate("Register", { socialData: response.socialData });
+        Alert.alert("미등록 계정", "등록되지 않은 계정입니다.\n아직 회원이 아니신가요?", [
+          { text: "취소", style: "cancel" },
+          {
+            text: "회원가입하기",
+            onPress: () => navigation.navigate("Register", { socialData: response.socialData }),
+            style: "default",
+          },
+        ]);
       } else {
         Alert.alert("로그인 실패", response.message || "로그인 중 오류가 발생했습니다.");
       }
@@ -205,7 +177,7 @@ const LoginScreen = ({ navigation }: any) => {
           {__DEV__ && (
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => handleAuthComplete("test", "test_token")}
+              onPress={() => handleAuthComplete("test", "test_code")}
               disabled={isLoggingIn}
               style={{ borderColor: THEMES[appTheme].accent, borderStyle: "dashed" }}
               className="h-[60px] rounded-[28px] flex-row items-center justify-center border mb-10"
