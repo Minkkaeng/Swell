@@ -2,7 +2,7 @@
  * @description Swell API 서비스 유틸리티 (Actual Backend Integration)
  */
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://swell-backend.onrender.com";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
 const BASE_URL_FASTAPI = process.env.EXPO_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -184,12 +184,12 @@ export const api = {
 
   // 인증 관련
   auth: {
-    socialLogin: async (provider: string, accessToken: string, redirectUri: string, isAccessToken?: boolean) => {
+    socialLogin: async (provider: string, accessToken: string, redirectUri: string, codeVerifier?: string) => {
       try {
         const response = await fetch(`${BASE_URL}/api/auth/social`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ provider, code: accessToken, redirectUri, isAccessToken }),
+          body: JSON.stringify({ provider, accessToken, redirectUri, codeVerifier }),
         });
         return await response.json();
       } catch (error) {

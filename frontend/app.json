@@ -2,22 +2,17 @@
   "expo": {
     "name": "Swell",
     "slug": "Swell",
-    "version": "1.0.6",
+    "version": "1.0.0",
+    "scheme": "swell",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "scheme": "com.kakao.swell",
     "newArchEnabled": false,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#001220"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "package": "com.kakao.swell",
+      "package": "com.minkkaeng.swell",
+      "supportsRtl": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#001220"
@@ -30,8 +25,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "74eebd47-938f-4a83-addb-e549de61d3e5"
+        "projectId": "bdc40d51-bba0-4fa7-983a-d4ff7d2cc9a8"
       }
-    }
+    },
+    "owner": "exile175r"
   }
 }

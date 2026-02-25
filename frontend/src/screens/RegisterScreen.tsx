@@ -100,19 +100,10 @@ const RegisterScreen = ({ navigation, route }: any) => {
       });
 
       if (response.success && response.user) {
-        // 재로그인 과정 없이 즉시 자동 로그인 처리
-        setStatus(response.user.status || "USER");
-        setUserId(response.user.id);
-        if (response.user.nickname) setNickname(response.user.nickname);
-
-        Alert.alert("가입 완료", "너울에 오신 것을 환영합니다!", [
+        Alert.alert("가입 완료", "회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.", [
           {
-            text: "시작하기",
-            onPress: () =>
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Guide" }],
-              }),
+            text: "확인",
+            onPress: () => navigation.navigate("Login"),
           },
         ]);
       } else {
