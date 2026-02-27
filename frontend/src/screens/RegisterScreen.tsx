@@ -74,30 +74,36 @@ const RegisterScreen = ({ navigation, route }: any) => {
     } else if (step < 3) {
       setStep(step + 1);
     } else {
+      // 연령 확인 (만 19세 미만 가입 제한)
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const bYear = parseInt(formData.birthYear);
+      const bMonth = parseInt(formData.birthMonth);
+
+      let age = currentYear - bYear;
+      if (currentMonth < bMonth) age--;
+
+      if (age < 19) {
+        setShowRejectModal(true);
+        return;
+      }
+
       // 가입 완료 시 API 호출
       const response = await api.auth.register({
         email: "user@example.com",
         nickname: formData.name,
-        gender: "U",
+        gender: formData.gender,
         platform: formData.socialPlatform,
-        birthYear: "2000",
-        birthMonth: "1",
+        birthYear: formData.birthYear,
+        birthMonth: formData.birthMonth,
         socialId: formData.socialId,
       });
 
       if (response.success && response.user) {
-        Alert.alert("가입 완료", "회원가입이 완료되었습니다.\n연령과 성별을 확인을 위해 이동합니다.", [
+        Alert.alert("가입 완료", "회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.", [
           {
             text: "확인",
-            onPress: () => {
-              setStatus(response.user.status || "USER");
-              setUserId(response.user.id);
-              if (response.user.nickname) setNickname(response.user.nickname);
-              if (response.token) {
-                useUserStore.getState().setToken(response.token);
-              }
-              navigation.replace("BirthYear");
-            },
+            onPress: () => navigation.navigate("Login"),
           },
         ]);
       } else {
@@ -110,7 +116,16 @@ const RegisterScreen = ({ navigation, route }: any) => {
     if (step === 1) return formData.agreeTerms && formData.agreePrivacy && formData.agreeContentUsage;
     if (step === 2) return formData.isSocialLinked;
     if (step === 3) {
-      return formData.name.trim().length >= 2;
+      const year = parseInt(formData.birthYear);
+      const month = parseInt(formData.birthMonth);
+      return (
+        formData.name.trim().length >= 2 &&
+        formData.gender !== "" &&
+        year >= 1900 &&
+        year <= new Date().getFullYear() &&
+        month >= 1 &&
+        month <= 12
+      );
     }
     return false;
   };
@@ -161,7 +176,8 @@ const RegisterScreen = ({ navigation, route }: any) => {
                 className="p-6 rounded-3xl border mb-8"
               >
                 <Text style={{ color: THEMES[appTheme].text }} className="opacity-60 text-xs leading-5">
-                  너울은 익명 커뮤니티로, 쾌적한 환경 유지를 위해 기본 약관 및 커뮤니티 가이드라인 준수가 필수입니다.
+                  너울은 성인 전용 익명 커뮤니티로, 쾌적한 환경 유지를 위해 기본 약관 및 커뮤니티 가이드라인 준수가
+                  필수입니다.
                 </Text>
               </View>
 
@@ -300,6 +316,87 @@ const RegisterScreen = ({ navigation, route }: any) => {
                     onChangeText={(text) => setFormData({ ...formData, name: text })}
                   />
                 </View>
+
+                <View>
+                  <Text style={{ color: THEMES[appTheme].text }} className="opacity-40 text-xs font-bold mb-2 ml-1">
+                    GENDER
+                  </Text>
+                  <View className="flex-row space-x-4 mb-10">
+                    {["남성", "여성"].map((g) => (
+                      <TouchableOpacity
+                        key={g}
+                        onPress={() => setFormData({ ...formData, gender: g })}
+                        style={{
+                          backgroundColor:
+                            formData.gender === g ? THEMES[appTheme].accent : THEMES[appTheme].surface + "66",
+                          borderColor: formData.gender === g ? THEMES[appTheme].accent : THEMES[appTheme].text + "0D",
+                        }}
+                        className={`flex-1 h-16 rounded-2xl items-center justify-center border ${g === "남성" ? "mr-4" : ""}`}
+                      >
+                        <Text
+                          style={{ color: formData.gender === g ? THEMES[appTheme].bg : THEMES[appTheme].text }}
+                          className="font-bold text-base"
+                        >
+                          {g}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Birth Date Section Added */}
+                <View className="space-y-6">
+                  <View>
+                    <Text style={{ color: THEMES[appTheme].text }} className="opacity-40 text-xs font-bold mb-2 ml-1">
+                      BIRTH DATE (연령 확인용)
+                    </Text>
+                    <View className="flex-row items-center space-x-4">
+                      <View
+                        style={{
+                          backgroundColor: THEMES[appTheme].surface + "66",
+                          borderColor: THEMES[appTheme].text + "0D",
+                        }}
+                        className="flex-1 flex-row items-center h-16 rounded-2xl px-6 border mr-4"
+                      >
+                        <TextInput
+                          placeholder="연도 (4자리)"
+                          placeholderTextColor={THEMES[appTheme].text + "33"}
+                          style={{ color: THEMES[appTheme].text, flex: 1 }}
+                          keyboardType="number-pad"
+                          maxLength={4}
+                          value={formData.birthYear}
+                          onChangeText={(text) => setFormData({ ...formData, birthYear: text })}
+                        />
+                        <Text style={{ color: THEMES[appTheme].text }} className="opacity-30 font-bold ml-2">
+                          년
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: THEMES[appTheme].surface + "66",
+                          borderColor: THEMES[appTheme].text + "0D",
+                        }}
+                        className="flex-1 flex-row items-center h-16 rounded-2xl px-6 border"
+                      >
+                        <TextInput
+                          placeholder="월"
+                          placeholderTextColor={THEMES[appTheme].text + "33"}
+                          style={{ color: THEMES[appTheme].text, flex: 1 }}
+                          keyboardType="number-pad"
+                          maxLength={2}
+                          value={formData.birthMonth}
+                          onChangeText={(text) => setFormData({ ...formData, birthMonth: text })}
+                        />
+                        <Text style={{ color: THEMES[appTheme].text }} className="opacity-30 font-bold ml-2">
+                          월
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={{ color: THEMES[appTheme].text }} className="opacity-20 text-[10px] mt-3 px-1">
+                      * 너울은 만 19세 이상의 성인만 이용 가능한 서비스입니다.
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
           )}
@@ -322,8 +419,8 @@ const RegisterScreen = ({ navigation, route }: any) => {
                 style={{ color: THEMES[appTheme].text }}
                 className="opacity-60 text-center leading-7 mb-10 text-base"
               >
-                죄송합니다. 너울은 만 19세 이상만{"\n"}이용 가능한 커뮤니티입니다.{"\n"}연령 조건을 충족할 때 다시
-                찾아주세요.
+                죄송합니다. 너울은 만 19세 이상의{"\n"}성인만 이용 가능한 커뮤니티입니다.{"\n"}연령 조건을 충족할 때
+                다시 찾아주세요.
               </Text>
               <TouchableOpacity
                 onPress={() => {

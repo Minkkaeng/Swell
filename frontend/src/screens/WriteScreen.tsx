@@ -66,6 +66,11 @@ const WriteScreen = ({ navigation }: any) => {
   const [aiSummary, setAISummary] = useState<string | null>(null);
 
   const handleAISummary = async () => {
+    if (userStatus !== "VIP") {
+      Alert.alert("VIP 전용", "AI 요약 기능은 VIP 회원만 이용 가능합니다.");
+      return;
+    }
+
     if (!content.trim()) {
       Alert.alert("내용 없음", "먼저 내용을 입력해 주세요.");
       return;
@@ -143,9 +148,7 @@ const WriteScreen = ({ navigation }: any) => {
 
       // 2. 게시글 작성 (실제 백엔드 규격에 맞춤)
       await api.posts.create({
-        title: finalTitle,
-        category: selectedCategory,
-        content: content,
+        content: finalTitle ? `[${finalTitle}]\n${content}` : content,
         userId: userId || "anonymous",
         nickname: nickname || "익명의 너울",
         hasVote: false,
@@ -251,41 +254,43 @@ const WriteScreen = ({ navigation }: any) => {
             />
           </View>
 
-          {/* AI Tools */}
-          <View className="mt-6">
-            <TouchableOpacity
-              onPress={handleAISummary}
-              disabled={isSummarizing || !content.trim()}
-              style={{ backgroundColor: THEMES[appTheme].accent + "0D", borderColor: THEMES[appTheme].accent + "33" }}
-              className={`flex-row items-center justify-center py-4 rounded-3xl border ${
-                isSummarizing ? "bg-white/5" : ""
-              }`}
-            >
-              {isSummarizing ? (
-                <ActivityIndicator size="small" color={THEMES[appTheme].accent} />
-              ) : (
-                <>
-                  <Sparkles size={18} color={THEMES[appTheme].accent} />
-                  <Text style={{ color: THEMES[appTheme].accent }} className="font-bold ml-2">
-                    AI로 내용 요약하기
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            {aiSummary && (
-              <Animated.View
-                entering={FadeInUp}
-                className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
+          {/* AI Tools for VIP */}
+          {userStatus === "VIP" && (
+            <View className="mt-6">
+              <TouchableOpacity
+                onPress={handleAISummary}
+                disabled={isSummarizing || !content.trim()}
+                style={{ backgroundColor: THEMES[appTheme].accent + "0D", borderColor: THEMES[appTheme].accent + "33" }}
+                className={`flex-row items-center justify-center py-4 rounded-3xl border ${
+                  isSummarizing ? "bg-white/5" : ""
+                }`}
               >
-                <View className="flex-row items-center mb-3">
-                  <Sparkles size={14} color="#00E0D0" opacity={0.6} />
-                  <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
-                </View>
-                <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
-              </Animated.View>
-            )}
-          </View>
+                {isSummarizing ? (
+                  <ActivityIndicator size="small" color={THEMES[appTheme].accent} />
+                ) : (
+                  <>
+                    <Sparkles size={18} color={THEMES[appTheme].accent} />
+                    <Text style={{ color: THEMES[appTheme].accent }} className="font-bold ml-2">
+                      AI로 내용 요약하기
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {aiSummary && (
+                <Animated.View
+                  entering={FadeInUp}
+                  className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
+                >
+                  <View className="flex-row items-center mb-3">
+                    <Sparkles size={14} color="#00E0D0" opacity={0.6} />
+                    <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
+                  </View>
+                  <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
+                </Animated.View>
+              )}
+            </View>
+          )}
 
           {/* Tips/Notice */}
           <View className="mt-8 flex-row items-start px-4 opacity-40 mb-10">

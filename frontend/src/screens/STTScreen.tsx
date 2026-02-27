@@ -81,6 +81,11 @@ const STTScreen = ({ navigation }: any) => {
   const [aiSummary, setAISummary] = useState<string | null>(null);
 
   const handleAISummary = async () => {
+    if (userStatus !== "VIP") {
+      Alert.alert("VIP 전용", "AI 요약 기능은 VIP 회원만 이용 가능합니다.");
+      return;
+    }
+
     if (!recognizedText.trim()) {
       Alert.alert("내용 없음", "먼저 음성을 인식시켜 주세요.");
       return;
@@ -121,7 +126,7 @@ const STTScreen = ({ navigation }: any) => {
 
       try {
         startLoadingNow(); // 음성 분석 시작 시 전역 로딩 즉시 노출
-        const result = await api.stt.recognize("");
+        const result = await api.stt.recognize();
         const textResult =
           result.text ||
           recognizedText ||
@@ -229,7 +234,6 @@ const STTScreen = ({ navigation }: any) => {
       // 2. 게시글 작성
       await api.posts.create({
         title: finalTitle,
-        category: selectedCategory,
         content: recognizedText,
         userId: userId || "anonymous",
         nickname: nickname || "익명의 너울",
@@ -464,38 +468,40 @@ const STTScreen = ({ navigation }: any) => {
               />
             </View>
 
-            {/* AI Tools */}
-            <View className="mt-6">
-              <TouchableOpacity
-                onPress={handleAISummary}
-                disabled={isSummarizing || !recognizedText.trim()}
-                className={`flex-row items-center justify-center py-4 rounded-3xl border border-[#00E0D0]/20 ${
-                  isSummarizing ? "bg-white/5" : "bg-[#00E0D0]/5"
-                }`}
-              >
-                {isSummarizing ? (
-                  <ActivityIndicator size="small" color="#00E0D0" />
-                ) : (
-                  <>
-                    <Sparkles size={18} color="#00E0D0" />
-                    <Text className="text-[#00E0D0] font-bold ml-2">AI로 내용 요약하기</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {aiSummary && (
-                <Animated.View
-                  entering={FadeInUp}
-                  className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
+            {/* AI Tools for VIP */}
+            {userStatus === "VIP" && (
+              <View className="mt-6">
+                <TouchableOpacity
+                  onPress={handleAISummary}
+                  disabled={isSummarizing || !recognizedText.trim()}
+                  className={`flex-row items-center justify-center py-4 rounded-3xl border border-[#00E0D0]/20 ${
+                    isSummarizing ? "bg-white/5" : "bg-[#00E0D0]/5"
+                  }`}
                 >
-                  <View className="flex-row items-center mb-3">
-                    <Sparkles size={14} color="#00E0D0" opacity={0.6} />
-                    <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
-                  </View>
-                  <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
-                </Animated.View>
-              )}
-            </View>
+                  {isSummarizing ? (
+                    <ActivityIndicator size="small" color="#00E0D0" />
+                  ) : (
+                    <>
+                      <Sparkles size={18} color="#00E0D0" />
+                      <Text className="text-[#00E0D0] font-bold ml-2">AI로 내용 요약하기</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {aiSummary && (
+                  <Animated.View
+                    entering={FadeInUp}
+                    className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
+                  >
+                    <View className="flex-row items-center mb-3">
+                      <Sparkles size={14} color="#00E0D0" opacity={0.6} />
+                      <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
+                    </View>
+                    <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
+                  </Animated.View>
+                )}
+              </View>
+            )}
 
             <TouchableOpacity
               onPress={() => {

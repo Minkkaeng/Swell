@@ -2,25 +2,10 @@
  * @description Swell API 서비스 유틸리티 (Actual Backend Integration)
  */
 
-import { useUserStore } from "../store/userStore";
-
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
 const BASE_URL_FASTAPI = process.env.EXPO_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const getHeaders = (isMultipart = false) => {
-  const token = useUserStore.getState().token;
-  const headers: any = {};
-  if (!isMultipart) {
-    headers["Content-Type"] = "application/json";
-  }
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  return headers;
-};
 
 export const api = {
   // 게시글 관련
@@ -28,10 +13,9 @@ export const api = {
     // 목록 조회
     get: async (page = 1, limit = 20, filter = "all") => {
       try {
-        const response = await fetch(`${BASE_URL}/api/posts?page=${page}&limit=${limit}&filter=${filter}`, {
-          headers: getHeaders(),
-        });
+        const response = await fetch(`${BASE_URL}/api/posts?page=${page}&limit=${limit}&filter=${filter}`);
         const data = await response.json();
+        // 백엔드 명세에 맞춰 데이터 파싱 (성공 시 data.posts 또는 data.data 확인 필요)
         return data.success ? data.posts || data.data || [] : [];
       } catch (error) {
         console.error("API Get Posts Error:", error);
@@ -50,14 +34,10 @@ export const api = {
       try {
         const response = await fetch(`${BASE_URL}/api/posts`, {
           method: "POST",
-          headers: getHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || "작성에 실패했습니다.");
-        }
-        return result;
+        return await response.json();
       } catch (error) {
         throw error;
       }
@@ -65,10 +45,7 @@ export const api = {
     // 삭제
     delete: async (id: string) => {
       try {
-        const response = await fetch(`${BASE_URL}/api/posts/${id}`, {
-          method: "DELETE",
-          headers: getHeaders(),
-        });
+        const response = await fetch(`${BASE_URL}/api/posts/${id}`, { method: "DELETE" });
         return await response.json();
       } catch (error) {
         throw error;
@@ -79,7 +56,7 @@ export const api = {
       try {
         const response = await fetch(`${BASE_URL}/api/posts/${id}`, {
           method: "PUT",
-          headers: getHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
         return await response.json();
@@ -92,7 +69,7 @@ export const api = {
       try {
         const response = await fetch(`${BASE_URL}/api/posts/${id}/reaction`, {
           method: "POST",
-          headers: getHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type, userId }),
         });
         return await response.json();
@@ -105,7 +82,7 @@ export const api = {
       try {
         const response = await fetch(`${BASE_URL}/api/posts/${id}/vote`, {
           method: "POST",
-          headers: getHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ voteType, userId }),
         });
         return await response.json();
@@ -182,44 +159,24 @@ export const api = {
 
   // AI/STT 관련
   stt: {
-    recognize: async (audioUri: string) => {
+    recognize: async () => {
       try {
-        const formData = new FormData();
-        formData.append("audio", {
-          uri: audioUri,
-          type: "audio/m4a", // expo-av 기본 포맷에 맞춤
-          name: "audio.m4a",
-        } as any);
-
-        const response = await fetch(`${BASE_URL}/api/stt`, {
-          method: "POST",
-          headers: getHeaders(true),
-          body: formData,
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || "STT 처리 실패");
-        }
-        return result;
+        const response = await fetch(`${BASE_URL}/api/stt`, { method: "POST" });
+        return await response.json();
       } catch (error) {
-        console.error("STT Recognize Error:", error);
-        throw error;
+        return { text: "오늘 하루는 정말 긴 파도 같았어요..." };
       }
     },
     summarize: async (text: string) => {
       try {
-        const response = await fetch(`${BASE_URL}/api/stt/summarize`, {
-          method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify({ text }),
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || "요약 처리 실패");
-        }
-        return result;
+        // 실제 API가 구현되기 전까지는 데모용 응답 반환 (또는 FastAPI 연동 가능)
+        // const response = await fetch(`${BASE_URL}/api/stt/summarize`, { ... });
+        await sleep(1000); // 작업 중임을 시뮬레이션
+        return {
+          success: true,
+          summary: `[AI 요약] "${text.substring(0, 30)}..."에 대한 깊은 공감과 위로의 분석이 완료되었습니다.`,
+        };
       } catch (error) {
-        console.error("STT Summarize Error:", error);
         throw error;
       }
     },
@@ -278,9 +235,7 @@ export const api = {
     // 상대방 프로필 정보 조회
     getProfile: async (userId: string) => {
       try {
-        const response = await fetch(`${BASE_URL}/api/users/profile/${userId}`, {
-          headers: getHeaders(),
-        });
+        const response = await fetch(`${BASE_URL}/api/users/profile/${userId}`);
         return await response.json();
       } catch (error) {
         throw error;
@@ -297,20 +252,6 @@ export const api = {
         return await response.json();
       } catch (error) {
         throw error;
-      }
-    },
-    // 푸시 토큰 업데이트
-    updatePushToken: async (userId: string, pushToken: string, notificationsEnabled: boolean = true) => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/users/push-token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, pushToken, notificationsEnabled }),
-        });
-        return await response.json();
-      } catch (error) {
-        console.error("Update Push Token Error:", error);
-        return { success: false };
       }
     },
     follow: (followerId: string, followingId: string) => api.users.toggleFollow(followerId, followingId),
@@ -346,64 +287,6 @@ export const api = {
         });
         return await response.json();
       } catch (error) {
-        throw error;
-      }
-    },
-    // 차단 (사용자 차단)
-    block: async (userId: string, targetId: string) => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/users/block`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, targetId }),
-        });
-        return await response.json();
-      } catch (error) {
-        console.error("Block User Error:", error);
-        throw error;
-      }
-    },
-    // 차단 해제
-    unblock: async (userId: string, targetId: string) => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/users/block`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, targetId }),
-        });
-        return await response.json();
-      } catch (error) {
-        console.error("Unblock User Error:", error);
-        throw error;
-      }
-    },
-  },
-
-  // 신고 관련 (추후 백엔드 API 연동용)
-  reports: {
-    submit: async (data: {
-      type: "post" | "comment" | "user";
-      targetId: string;
-      reason: string;
-      reporterId: string;
-    }) => {
-      try {
-        // 백엔드 신고 API가 준비되면 아래 주석을 해제하고 사용합니다.
-        /*
-        const response = await fetch(`${BASE_URL}/api/reports`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        return await response.json();
-        */
-
-        // 현재는 콘솔 출력 및 성공 목업 응답으로 대체
-        console.log("🚀 [API 통신 규격] Report Submitted:", data);
-        await sleep(300); // 네트워크 딜레이 시뮬레이션
-        return { success: true, message: "신고가 접수되었습니다." };
-      } catch (error) {
-        console.error("Report Submit Error:", error);
         throw error;
       }
     },

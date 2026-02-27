@@ -1,19 +1,17 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api } from "../services/api";
 
 export type UserStatus = "GUEST" | "USER" | "VIP";
 
 interface UserState {
   status: UserStatus;
   userId: string | null; // 사용자 고유 식별자 추가
-  token: string | null; // JWT 인증 토큰
   nickname: string;
   lastNicknameUpdate: string | null; // "YYYY-MM-DD"
   isInitialNickname: boolean;
-  // dailyFreeTokens: number;
-  // totalTokens: number;
+  dailyFreeTokens: number;
+  totalTokens: number;
   lastUsedDate: string;
   viewedPostsCount: number;
   hasSeenGuide: boolean;
@@ -36,12 +34,10 @@ interface UserState {
   myReportedPostIds: string[]; // 내가 신고한 게시글 ID 목록
   myReportedUserIds: string[]; // 내가 신고한 회원 ID 목록
   birthYear: string | null; // 사용자 생년
-  pushToken: string | null; // 푸시 알림 토큰 추가
 
   // Actions
   setStatus: (status: UserStatus) => void;
   setUserId: (id: string | null) => void;
-  setToken: (token: string | null) => void; // 토큰 설정 함수
   setNickname: (newNickname: string) => { success: boolean; message: string };
   checkNicknameAvailability: (newNickname: string) => { available: boolean; message: string };
   setHasSeenGuide: (seen: boolean) => void;
@@ -49,24 +45,22 @@ interface UserState {
   setGlobalLoading: (loading: boolean) => void;
   setAppTheme: (theme: "midnight" | "ocean" | "sunset" | "forest") => void;
   setNotificationsEnabled: (enabled: boolean) => void;
-  reportPost: (postId: string, reason?: string) => { success: boolean; message: string }; // 게시글 신고
+  reportPost: (postId: string) => { success: boolean; message: string }; // 게시글 신고
   reportUser: (userId: string, reason: string) => { success: boolean; message: string }; // 회원 신고
-  reportComment: (commentId: string, reason: string) => { success: boolean; message: string }; // 댓글 신고
   setPenalty: (level: number, days: number, reason: string) => void; // 제재 액션
   blockUser: (id: string, nickname: string) => void;
   unblockUser: (id: string) => void;
-  // useToken: () => boolean;
+  useToken: () => boolean;
   toggleFollow: (userId: string, nickname?: string) => void;
-  // buyTokens: (amount: number) => void;
+  buyTokens: (amount: number) => void;
   addViewedPost: () => boolean;
   resetDaily: () => void;
-  // addTokenByAd: () => void;
-  // upgradeToVIP: () => void;
+  addTokenByAd: () => void;
+  upgradeToVIP: () => void;
   setBirthYear: (year: string) => void;
   setSecretMode: (active: boolean) => void;
   setAppPassword: (password: string | null) => void;
   setMarketingAccepted: (accepted: boolean) => void;
-  setPushToken: (token: string | null) => void;
   resetStore: () => void;
 }
 
@@ -84,12 +78,11 @@ export const useUserStore = create<UserState>()(
     (set, get) => ({
       status: "GUEST",
       userId: `guest_${Math.random().toString(36).substring(2, 11)}`,
-      token: null,
       nickname: generateRandomNickname(),
       lastNicknameUpdate: null,
       isInitialNickname: true,
-      // dailyFreeTokens: 10,
-      // totalTokens: 0,
+      dailyFreeTokens: 10,
+      totalTokens: 0,
       lastUsedDate: new Date().toISOString().split("T")[0],
       viewedPostsCount: 0,
       hasSeenGuide: false,
@@ -112,11 +105,9 @@ export const useUserStore = create<UserState>()(
       myReportedPostIds: [],
       myReportedUserIds: [],
       birthYear: null,
-      pushToken: null,
 
       setStatus: (status) => set({ status }),
       setUserId: (id) => set({ userId: id }),
-      setToken: (token) => set({ token }),
       setHasSeenGuide: (seen) => set({ hasSeenGuide: seen }),
       setGuidelineSeen: () => set({ lastGuidelineDate: new Date().toISOString().split("T")[0] }),
       setGlobalLoading: (loading: boolean) => set({ isGlobalLoading: loading }),
@@ -126,10 +117,9 @@ export const useUserStore = create<UserState>()(
       setSecretMode: (active) => set({ isSecretModeActive: active }),
       setAppPassword: (password) => set({ appPassword: password }),
       setMarketingAccepted: (accepted) => set({ isMarketingAccepted: accepted }),
-      setPushToken: (token) => set({ pushToken: token }),
 
-      reportPost: (postId: string, reason = "사유 없음") => {
-        const { myReportedPostIds, userId } = get();
+      reportPost: (postId: string) => {
+        const { myReportedPostIds } = get();
         if (myReportedPostIds.includes(postId)) {
           return { success: false, message: "이미 신고한 게시글입니다." };
         }
@@ -144,19 +134,6 @@ export const useUserStore = create<UserState>()(
             myReportedPostIds: [...state.myReportedPostIds, postId],
           };
         });
-
-        // 🚀 백엔드 API 호출 (비동기 처리, UI 렌더링 블로킹 방지)
-        setTimeout(() => {
-          api.reports
-            .submit({
-              type: "post",
-              targetId: postId,
-              reason: reason,
-              reporterId: userId || "anonymous",
-            })
-            .catch((e) => console.error("Report Post API error", e));
-        }, 0);
-
         return { success: true, message: "게시글 신고가 접수되었습니다." };
       },
 
@@ -166,7 +143,7 @@ export const useUserStore = create<UserState>()(
       },
 
       reportUser: (targetUserId, reason) => {
-        const { myReportedUserIds, userId } = get();
+        const { myReportedUserIds } = get();
         if (myReportedUserIds.includes(targetUserId)) {
           return { success: false, message: "이미 신고한 회원입니다." };
         }
@@ -176,40 +153,13 @@ export const useUserStore = create<UserState>()(
           const nextUserReportCounts = { ...state.userReportCounts, [targetUserId]: currentCount };
           const nextMyReportedUserIds = [...state.myReportedUserIds, targetUserId];
 
+          // 패널티 판정 로직은 추후 백엔드에서 전담하고,
+          // 프론트엔드는 서버에서 전달받은 상태(status: "BANNED" 등)만 반영하도록 가볍게 관리합니다.
+
           return { userReportCounts: nextUserReportCounts, myReportedUserIds: nextMyReportedUserIds };
         });
 
-        // 🚀 백엔드 API 호출 (비동기 처리)
-        setTimeout(() => {
-          api.reports
-            .submit({
-              type: "user",
-              targetId: targetUserId,
-              reason: reason,
-              reporterId: userId || "anonymous",
-            })
-            .catch((e) => console.error("Report User API error", e));
-        }, 0);
-
         return { success: true, message: "회원 신고가 접수되었습니다." };
-      },
-
-      reportComment: (commentId, reason) => {
-        const { userId } = get();
-
-        // 🚀 백엔드 API 호출 (비동기 처리)
-        setTimeout(() => {
-          api.reports
-            .submit({
-              type: "comment",
-              targetId: commentId,
-              reason: reason,
-              reporterId: userId || "anonymous",
-            })
-            .catch((e) => console.error("Report Comment API error", e));
-        }, 0);
-
-        return { success: true, message: "댓글 신고가 접수되었습니다." };
       },
 
       blockUser: (id, nickname) => {
@@ -222,24 +172,12 @@ export const useUserStore = create<UserState>()(
         set({
           blockedUsers: [...blockedUsers, { id, nickname, blockedAt }],
         });
-
-        // Backend Sync
-        const currentUserId = get().userId;
-        if (currentUserId && !currentUserId.startsWith("guest_")) {
-          api.users.block(currentUserId, id).catch((e) => console.error("Block API error", e));
-        }
       },
 
       unblockUser: (id) => {
         set((state) => ({
           blockedUsers: state.blockedUsers.filter((u) => u.id !== id),
         }));
-
-        // Backend Sync
-        const currentUserId = get().userId;
-        if (currentUserId && !currentUserId.startsWith("guest_")) {
-          api.users.unblock(currentUserId, id).catch((e) => console.error("Unblock API error", e));
-        }
       },
 
       toggleFollow: (userId: string, nickname?: string) => {
@@ -324,7 +262,6 @@ export const useUserStore = create<UserState>()(
         return { available: true, message: "사용 가능한 닉네임입니다." };
       },
 
-      /*
       useToken: () => {
         const { status, dailyFreeTokens, totalTokens, resetDaily } = get();
 
@@ -359,7 +296,6 @@ export const useUserStore = create<UserState>()(
       upgradeToVIP: () => {
         set({ status: "VIP" });
       },
-      */
 
       addViewedPost: () => {
         const { status, viewedPostsCount } = get();
@@ -372,11 +308,9 @@ export const useUserStore = create<UserState>()(
         return false;
       },
 
-      /*
       addTokenByAd: () => {
         set((state) => ({ totalTokens: state.totalTokens + 1 }));
       },
-      */
 
       resetDaily: () => {
         const today = new Date().toISOString().split("T")[0];
@@ -385,7 +319,7 @@ export const useUserStore = create<UserState>()(
         if (lastUsedDate !== today) {
           set({
             lastUsedDate: today,
-            // dailyFreeTokens: 10,
+            dailyFreeTokens: 10,
             viewedPostsCount: 0,
           });
         }
@@ -397,15 +331,14 @@ export const useUserStore = create<UserState>()(
           nickname: generateRandomNickname(),
           lastNicknameUpdate: null,
           isInitialNickname: true,
-          // dailyFreeTokens: 10,
-          // totalTokens: 0,
+          dailyFreeTokens: 10,
+          totalTokens: 0,
           lastUsedDate: new Date().toISOString().split("T")[0],
           viewedPostsCount: 0,
           hasSeenGuide: false,
           lastGuidelineDate: null,
           isGlobalLoading: false,
           userId: null,
-          token: null,
           blockedUsers: [],
           following: [],
           appTheme: "midnight",
@@ -419,7 +352,6 @@ export const useUserStore = create<UserState>()(
           isSecretModeActive: false,
           appPassword: null,
           isMarketingAccepted: false,
-          pushToken: null,
         });
       },
     }),
