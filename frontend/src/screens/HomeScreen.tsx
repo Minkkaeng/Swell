@@ -131,6 +131,42 @@ const MOCK_POSTS = [
     likes: 124,
     comments: 56,
   },
+  {
+    id: "6",
+    userId: "user6",
+    nickname: "손절할까말까",
+    category: "고민",
+    title: "10년지기 친구 축의금 5만원.. 서운한 거 비정상?",
+    content:
+      "나는 걔 결혼할 때 가방순이도 해주고 50만원 했는데, 이번에 내 결혼식에 와서 밥먹고 5만원 내고 감... 사정 안 좋은 거 알긴 하는데 솔직히 너무 서운하고 배신감 든다. 남편 보기도 민망하고.. 이거 내가 속 좁은 거야?",
+    time: "7시간 전",
+    likes: 89,
+    comments: 42,
+  },
+  {
+    id: "7",
+    userId: "user7",
+    nickname: "잠수이별피해자",
+    category: "일상",
+    title: "3년 사귄 남친 잠수이별 탔다 미친",
+    content:
+      "어제까지만 해도 사랑한다고 잘 자라고 하더니 오늘 아침부터 카톡 안 읽씹하길래 걱정했는데.. 인스타 보니까 나 차단하고 딴 여자랑 놀러간 사진 스토리 올라와 있었음(부계정으로 봄) 진짜 사람 새끼 아닌 거 같은데 어떡하지 손발이 떨려",
+    time: "8시간 전",
+    likes: 156,
+    comments: 63,
+  },
+  {
+    id: "8",
+    userId: "user8",
+    nickname: "동호회탈퇴각",
+    category: "질문",
+    title: "동호회에서 묘하게 왕따시키는 느낌 나는데 어떡해",
+    content:
+      "테니스 모임인데, 저격하는 건 아닌데 묘하게 나만 빼고 지들끼리 단톡방 하나 더 파서 주말에 약속 잡은 거 걸림. 모른 척 하긴 했는데 너무 기분 더럽다. 그냥 쿨하게 탈퇴버튼 누르는 게 답이겠지?",
+    time: "10시간 전",
+    likes: 34,
+    comments: 15,
+  },
 ];
 
 /**
@@ -163,13 +199,13 @@ const HomeScreen = ({ navigation }: any) => {
   const {
     status,
     nickname,
-    dailyFreeTokens,
-    totalTokens,
-    useToken,
+    // dailyFreeTokens,
+    // totalTokens,
+    // useToken,
     addViewedPost,
-    addTokenByAd,
-    buyTokens,
-    upgradeToVIP,
+    // addTokenByAd,
+    // buyTokens,
+    // upgradeToVIP,
     setHasSeenGuide,
     hasSeenGuide,
     userId,
@@ -182,7 +218,7 @@ const HomeScreen = ({ navigation }: any) => {
     following,
     toggleFollow,
   } = useUserStore();
-  const [showStore, setShowStore] = React.useState(false);
+  // const [showStore, setShowStore] = React.useState(false);
   const [onboardingStep, setOnboardingStep] = React.useState(0);
   const [showOnboarding, setShowOnboarding] = React.useState(!hasSeenGuide);
   const [likedPosts, setLikedPosts] = React.useState<Set<string>>(new Set());
@@ -402,7 +438,7 @@ const HomeScreen = ({ navigation }: any) => {
     }
 
     if (reportType === "post" && selectedPostToReport) {
-      const result = reportPost(selectedPostToReport.id);
+      const result = reportPost(selectedPostToReport.id, reportReason);
       if (result.success && isBlockChecked && selectedPostToReport.userId) {
         useUserStore.getState().blockUser(selectedPostToReport.userId, selectedPostToReport.nickname);
       }
@@ -497,27 +533,27 @@ const HomeScreen = ({ navigation }: any) => {
     <SafeAreaView style={{ backgroundColor: getBgTint() }} className="flex-1 transition-colors duration-500">
       <View className="flex-1">
         {/* Header */}
-        <View className="px-6 pt-6 pb-3 flex-row justify-between items-center">
+        <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
           {/* Left Side: Back Arrow (only when showing my posts) */}
-          <View className="w-12 h-12">
+          <View className="w-10 h-10">
             {showMyPosts && (
               <TouchableOpacity
                 onPress={() => setShowMyPosts(false)}
                 style={{ backgroundColor: THEMES[appTheme].surface }}
-                className="w-12 h-12 rounded-2xl items-center justify-center border border-white/5 shadow-lg"
+                className="w-10 h-10 rounded-xl items-center justify-center border border-white/5 shadow-lg"
               >
-                <ArrowLeft size={24} color={THEMES[appTheme].accent} />
+                <ArrowLeft size={20} color={THEMES[appTheme].accent} />
               </TouchableOpacity>
             )}
           </View>
 
           {/* Center: Logo & Brand Name */}
           <View className="items-center flex-row">
-            <View className="mr-3">
-              <WaveLogo size={24} color={THEMES[appTheme].accent} />
+            <View className="mr-2">
+              <WaveLogo size={20} color={THEMES[appTheme].accent} />
             </View>
             <View>
-              <Text style={{ color: THEMES[appTheme].text }} className="text-lg font-black tracking-tight">
+              <Text style={{ color: THEMES[appTheme].text }} className="text-base font-black tracking-tight">
                 {showMyPosts ? "내가 담은 파도" : "너울"}
               </Text>
             </View>
@@ -528,20 +564,20 @@ const HomeScreen = ({ navigation }: any) => {
             <TouchableOpacity
               onPress={() => setShowNotifications(true)}
               style={{ backgroundColor: THEMES[appTheme].surface }}
-              className="w-12 h-12 rounded-2xl items-center justify-center border border-white/5 shadow-lg relative mr-2"
+              className="w-10 h-10 rounded-xl items-center justify-center border border-white/5 shadow-lg relative mr-2"
             >
-              <Bell size={24} color={THEMES[appTheme].text} />
+              <Bell size={20} color={THEMES[appTheme].text} />
               {notifications.some((n) => !n.isRead) && (
-                <View className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#E7433C] rounded-full border-2 border-[#12202C]" />
+                <View className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#E7433C] rounded-full border-2 border-[#12202C]" />
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setShowMenu(true)}
               style={{ backgroundColor: THEMES[appTheme].surface }}
-              className="w-12 h-12 rounded-2xl items-center justify-center border border-white/5 shadow-lg"
+              className="w-10 h-10 rounded-xl items-center justify-center border border-white/5 shadow-lg"
             >
-              <Menu size={24} color={THEMES[appTheme].text} />
+              <Menu size={20} color={THEMES[appTheme].text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -550,7 +586,7 @@ const HomeScreen = ({ navigation }: any) => {
         <View className="px-6 mb-4">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface + "66" }}
-            className="flex-row items-center rounded-3xl border border-white/5 px-5 h-14"
+            className="flex-row items-center rounded-2xl border border-white/5 px-4 h-12"
           >
             <Search size={20} color={THEMES[appTheme].accent} opacity={0.6} />
             <TextInput
@@ -636,34 +672,48 @@ const HomeScreen = ({ navigation }: any) => {
             refreshing={isRefreshing}
             renderItem={({ item }: { item: Post }) => (
               <TouchableOpacity
-                activeOpacity={0.7}
                 onPress={() => handlePostPress(item)}
-                style={{ backgroundColor: THEMES[appTheme].surface + "66" }}
-                className="p-6 s24:p-8 rounded-[32px] mb-5 s24:mb-6 border border-white/5 shadow-sm"
+                activeOpacity={0.8}
+                style={{ backgroundColor: THEMES[appTheme].surface + "4D" }}
+                className="p-5 rounded-[24px] mb-4 border border-white/5 shadow-sm"
               >
-                <View className="mb-5 s24:mb-6">
-                  <View className="flex-row justify-between items-start">
-                    <View className="self-start">
-                      <Text
-                        style={{ color: THEMES[appTheme].accent }}
-                        className="text-[10px] font-bold tracking-[2px] mb-2 uppercase"
-                      >
-                        {item.nickname}
+                <View className="flex-row justify-between items-start mb-3">
+                  <View className="flex-row items-center">
+                    <View
+                      style={{ backgroundColor: THEMES[appTheme].accent + "1A" }}
+                      className="px-2.5 py-1 rounded-lg border border-[#00E0D033]"
+                    >
+                      <Text style={{ color: THEMES[appTheme].accent }} className="text-[9px] font-bold">
+                        {item.category}
                       </Text>
                     </View>
                     <TouchableOpacity
-                      onPress={(e) => {
+                      onPress={(e: any) => {
                         e.stopPropagation();
-                        handleReport(item);
+                        fetchAuthorProfile(item.userId);
                       }}
-                      className="opacity-40 p-1"
+                      className="ml-3"
                     >
-                      <AlertCircle size={16} color={THEMES[appTheme].text} />
+                      <Text style={{ color: THEMES[appTheme].text }} className="text-[11px] font-bold opacity-30">
+                        {item.nickname}
+                      </Text>
                     </TouchableOpacity>
                   </View>
+                  <TouchableOpacity
+                    onPress={(e: any) => {
+                      e.stopPropagation();
+                      handleReport(item);
+                    }}
+                    className="w-6 h-6 items-center justify-center"
+                  >
+                    <MoreHorizontal size={16} color={THEMES[appTheme].text} opacity={0.2} />
+                  </TouchableOpacity>
+                </View>
+
+                <View className="mb-2">
                   <Text
                     style={{ color: THEMES[appTheme].text }}
-                    className="text-lg font-bold leading-7"
+                    className="text-base font-bold leading-6"
                     numberOfLines={2}
                     ellipsizeMode="tail"
                   >
@@ -671,8 +721,8 @@ const HomeScreen = ({ navigation }: any) => {
                   </Text>
                 </View>
 
-                <View className="flex-row justify-between items-center mt-4">
-                  <Text style={{ color: THEMES[appTheme].text }} className="text-xs font-medium opacity-30">
+                <View className="flex-row justify-between items-center mt-3">
+                  <Text style={{ color: THEMES[appTheme].text }} className="text-[10px] font-medium opacity-20">
                     {item.time}
                   </Text>
                   <View className="flex-row items-center">
@@ -683,23 +733,29 @@ const HomeScreen = ({ navigation }: any) => {
                         handleToggleLike(item.id);
                       }}
                       style={{ backgroundColor: THEMES[appTheme].bg + "66" }}
-                      className="flex-row items-center px-4 py-2 rounded-full mr-2"
+                      className="flex-row items-center px-3 py-1.5 rounded-full mr-2"
                     >
                       <Heart
-                        size={14}
+                        size={12}
                         color={THEMES[appTheme].accent}
                         fill={likedPosts.has(item.id) ? THEMES[appTheme].accent : "transparent"}
                       />
-                      <Text style={{ color: THEMES[appTheme].text }} className="text-xs font-bold ml-2 opacity-60">
+                      <Text
+                        style={{ color: THEMES[appTheme].text }}
+                        className="text-[10px] font-bold ml-1.5 opacity-60"
+                      >
                         {likedPosts.has(item.id) ? item.likes + 1 : item.likes}
                       </Text>
                     </TouchableOpacity>
                     <View
                       style={{ backgroundColor: THEMES[appTheme].bg + "66" }}
-                      className="flex-row items-center px-4 py-2 rounded-full"
+                      className="flex-row items-center px-3 py-1.5 rounded-full"
                     >
-                      <MessageSquare size={14} color={THEMES[appTheme].text} />
-                      <Text style={{ color: THEMES[appTheme].text }} className="text-xs font-bold ml-2 opacity-60">
+                      <MessageSquare size={12} color={THEMES[appTheme].text} />
+                      <Text
+                        style={{ color: THEMES[appTheme].text }}
+                        className="text-[10px] font-bold ml-1.5 opacity-60"
+                      >
                         {item.comments}
                       </Text>
                     </View>
@@ -725,9 +781,9 @@ const HomeScreen = ({ navigation }: any) => {
               web: { boxShadow: `0px 0px 20px ${THEMES[appTheme].accent}80` },
             }),
           ]}
-          className="absolute bottom-10 right-6 w-16 h-16 s24:w-20 s24:h-20 rounded-[24px] s24:rounded-[30px] items-center justify-center shadow-2xl"
+          className="absolute bottom-10 right-6 w-14 h-14 rounded-[20px] items-center justify-center shadow-2xl"
         >
-          <Plus size={32} color={THEMES[appTheme].bg} />
+          <Plus size={28} color={THEMES[appTheme].bg} />
         </TouchableOpacity>
 
         {/* Choice Modal for Write/Voice */}
@@ -1023,7 +1079,7 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
         </Modal>
 
-        {/* Token Store Modal */}
+        {/* Token Store Modal 
         <Modal visible={showStore} transparent={true} animationType="slide" onRequestClose={() => setShowStore(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
@@ -1192,7 +1248,6 @@ const HomeScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Purchase Notice */}
               <View
                 style={{ backgroundColor: THEMES[appTheme].text + "08" }}
                 className="p-6 rounded-3xl border border-white/5 items-center mb-8"
@@ -1209,6 +1264,7 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </View>
         </Modal>
+        */}
         {/* Author Profile Modal */}
         <Modal visible={showAuthorProfile} animationType="slide" transparent={true}>
           <View style={{ backgroundColor: THEMES[appTheme].bg + "F2" }} className="flex-1 pt-20">

@@ -16,3 +16,7 @@ if (fs.existsSync(distPath)) {
 } else {
   console.error("index.html not found in dist folder");
 }
+
+const noJekyllPath = path.join(__dirname, "dist", ".nojekyll");
+fs.writeFileSync(noJekyllPath, "");
+console.log("Created .nojekyll file to prevent Jekyll from ignoring _expo folder.");
