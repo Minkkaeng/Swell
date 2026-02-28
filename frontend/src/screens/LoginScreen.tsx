@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Dimensions, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Dimensions,
+  Alert,
+  Platform,
+} from "react-native";
 import { CheckSquare, Square, X, MessageCircle, Waves } from "lucide-react-native";
 import { Linking } from "react-native";
 import WaveLogo from "../components/WaveLogo";
@@ -21,19 +30,15 @@ const LoginScreen = ({ navigation }: any) => {
   const { startLoading, stopLoading } = useGlobalLoader();
   const { setStatus, setUserId, setNickname, nickname, hasSeenGuide, appTheme } = useUserStore();
 
-  // 카카오/구글 콘솔의 리다이렉트 URI 제약(HTTP/HTTPS 강제)을 우회하기 위한 프록시 URL
-  // 앱(프론트엔드)은 이 HTTP 주소로 보냅니다 -> 백엔드(/api/auth/callback)가 받음 -> 백엔드가 강제로 앱(swell://oauth)으로 던짐
-  const PROXY_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/callback`;
-
-  const redirectUri = PROXY_URL;
-
-  // 인앱 브라우저가 돌아올 때 받을 딥링크 주소를 리스너에 명시 (백엔드가 여기로 던지면 앱이 잡음)
-  const returnUrl = AuthSession.makeRedirectUri({
-    scheme: "swell",
-    path: "oauth",
+  // 플랫폼별 리다이렉트 URI 설정 (Web vs Native 대응)
+  const redirectUri = AuthSession.makeRedirectUri({
+    // 웹에서는 현재 도메인을 사용하고, 네이티브에서는 프록시/딥링크 사용
+    path: Platform.OS === "web" ? undefined : "oauth",
   });
 
-  console.log("[Auth] Setup -> Proxy:", redirectUri, " / Native Return:", returnUrl);
+  const returnUrl = redirectUri;
+
+  console.log(`[Auth] Platform: ${Platform.OS}, Redirect URI: ${redirectUri}`);
 
   // 카카오 로그인 요청 설정
   const [kakaoRequest, kakaoResponse, promptKakaoAsync] = AuthSession.useAuthRequest(
@@ -259,8 +264,8 @@ const LoginScreen = ({ navigation }: any) => {
             )}
           </TouchableOpacity>
 
-          {/* 개발용 테스트 로그인 버튼 */}
-          {__DEV__ && (
+          {/* 웹 테스트 환경 또는 개발용 테스트 로그인 버튼 */}
+          {(Platform.OS === "web" || __DEV__) && (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => handleAuthComplete("test", "test_code")}
