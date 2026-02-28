@@ -15,7 +15,6 @@ import { Modal } from "react-native";
 import { api } from "../services/api";
 import { useUserStore } from "../store/userStore";
 import { THEMES } from "../styles/theme";
-import Animated, { FadeInUp } from "react-native-reanimated";
 import { useGlobalLoader } from "../hooks/useGlobalLoader";
 import {
   Mic,
@@ -251,7 +250,7 @@ const STTScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={{ backgroundColor: THEMES[appTheme].bg }} className="flex-1">
       {/* Community Guidelines Modal */}
-      <Modal visible={showGuide} transparent={true} animationType="fade" onRequestClose={() => setShowGuide(false)}>
+      <Modal visible={showGuide} transparent={true} animationType="none" onRequestClose={() => setShowGuide(false)}>
         <View className="flex-1 bg-black/80 items-center justify-center p-8">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -332,13 +331,7 @@ const STTScreen = ({ navigation }: any) => {
                 style={{ backgroundColor: THEMES[appTheme].surface + "4D" }}
                 className="px-5 py-1.5 rounded-full border border-white/5 mb-8 flex-row items-center"
               >
-                {isRecording && (
-                  <Animated.View
-                    entering={FadeInUp}
-                    className="w-2 h-2 rounded-full bg-[#E7433C] mr-2"
-                    style={{ opacity: 0.8 }}
-                  />
-                )}
+                {isRecording && <View className="w-2 h-2 rounded-full bg-[#E7433C] mr-2" style={{ opacity: 0.8 }} />}
                 <Text style={{ color: THEMES[appTheme].accent }} className="text-[10px] font-bold tracking-[3px]">
                   {isRecording ? "RECORDING NOW" : "VOICE ARCHIVE"}
                 </Text>
@@ -373,23 +366,26 @@ const STTScreen = ({ navigation }: any) => {
 
             <View className="items-center pb-12">
               <TouchableOpacity
-                activeOpacity={0.8}
+                activeOpacity={0.9}
                 onPress={toggleRecording}
-                className={`w-20 h-20 rounded-[30px] items-center justify-center shadow-2xl`}
+                className={`w-24 h-24 rounded-[35px] items-center justify-center shadow-2xl`}
                 style={[
-                  { backgroundColor: isRecording ? "#E7433C" : THEMES[appTheme].accent },
+                  {
+                    backgroundColor: isRecording ? "#E7433C" : THEMES[appTheme].accent,
+                    transform: isRecording ? [{ scale: 1.1 }] : [{ scale: 1 }],
+                  },
                   !isRecording &&
                     Platform.select({
-                      ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.5, shadowRadius: 20 },
-                      android: { elevation: 12 },
-                      web: { boxShadow: `0px 0px 20px ${THEMES[appTheme].accent}80` },
+                      ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.5, shadowRadius: 25 },
+                      android: { elevation: 15 },
+                      web: { boxShadow: `0px 10px 30px ${THEMES[appTheme].accent}66` },
                     }),
                 ]}
               >
                 {isRecording ? (
-                  <Square size={30} color="white" fill="white" />
+                  <Square size={36} color="white" fill="white" />
                 ) : (
-                  <Mic size={30} color={THEMES[appTheme].bg} />
+                  <Mic size={36} color={THEMES[appTheme].bg} />
                 )}
               </TouchableOpacity>
               <Text className="text-[#E0E0E0]/40 mt-6 font-bold tracking-[1px] text-xs">
@@ -453,15 +449,15 @@ const STTScreen = ({ navigation }: any) => {
             </View>
 
             <View
-              style={{ backgroundColor: THEMES[appTheme].surface + "33" }}
-              className="rounded-[32px] p-6 border border-white/5 min-h-[220px]"
+              style={{ backgroundColor: THEMES[appTheme].surface + "4D" }}
+              className="rounded-[40px] p-8 border border-white/10 min-h-[280px] shadow-sm"
             >
-              <Text className="text-[#E0E0E0]/40 text-xs font-bold mb-3 tracking-widest uppercase">Content</Text>
+              <Text className="text-[#E0E0E0]/30 text-[10px] font-black mb-5 tracking-[3px] uppercase">Content</Text>
               <TextInput
                 multiline
                 placeholder="목소리가 텍스트로 변환되었습니다. 내용을 다듬어보세요."
                 placeholderTextColor="#E0E0E020"
-                className="text-[#E0E0E0] text-[16px] leading-7"
+                className="text-[#E0E0E0] text-[17px] leading-8 font-medium"
                 value={recognizedText}
                 onChangeText={setRecognizedText}
                 textAlignVertical="top"
@@ -489,16 +485,13 @@ const STTScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
 
                 {aiSummary && (
-                  <Animated.View
-                    entering={FadeInUp}
-                    className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
-                  >
+                  <View className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10">
                     <View className="flex-row items-center mb-3">
                       <Sparkles size={14} color="#00E0D0" opacity={0.6} />
                       <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
                     </View>
                     <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
-                  </Animated.View>
+                  </View>
                 )}
               </View>
             )}

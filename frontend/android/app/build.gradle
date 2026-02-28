@@ -4,10 +4,12 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
+
 // Force each subproject to use Z: drive for its build directory to avoid path length issues
-subprojects {
-    buildDir = "Z:/frontend/android/build/${project.name}"
-}
+// subprojects {
+//     buildDir = "Z:/frontend/android/build/${project.name}"
+// }
+
 
 /**
  * This is the configuration block to customize your React Native Android app.

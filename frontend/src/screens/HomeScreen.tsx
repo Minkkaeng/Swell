@@ -33,7 +33,6 @@ import WaveLogo from "../components/WaveLogo";
 import { api } from "../services/api";
 import { useUserStore } from "../store/userStore";
 import { THEMES } from "../styles/theme";
-import AnimatedReanimated, { FadeInUp } from "react-native-reanimated";
 import { useGlobalLoader } from "../hooks/useGlobalLoader";
 
 /*
@@ -395,31 +394,35 @@ const HomeScreen = ({ navigation }: any) => {
     }, 300);
   };
 
-  const submitReport = () => {
+  const submitReport = async () => {
     if (!reportReason) {
       Alert.alert("알림", "신고 사유를 선택해 주세요.");
       return;
     }
 
-    if (reportType === "post" && selectedPostToReport) {
-      const result = reportPost(selectedPostToReport.id);
-      if (result.success && isBlockChecked && selectedPostToReport.userId) {
-        useUserStore.getState().blockUser(selectedPostToReport.userId, selectedPostToReport.nickname);
+    try {
+      if (reportType === "post" && selectedPostToReport) {
+        const result = await reportPost(selectedPostToReport.id, reportReason);
+        if (result.success && isBlockChecked && selectedPostToReport.userId) {
+          await useUserStore.getState().blockUser(selectedPostToReport.userId, selectedPostToReport.nickname);
+        }
+      } else if (reportType === "user" && selectedUserToReport) {
+        const result = await useUserStore.getState().reportUser(selectedUserToReport.id, reportReason);
+        if (result.success && isBlockChecked) {
+          await useUserStore.getState().blockUser(selectedUserToReport.id, selectedUserToReport.nickname);
+        }
       }
-    } else if (reportType === "user" && selectedUserToReport) {
-      const result = useUserStore.getState().reportUser(selectedUserToReport.id, reportReason);
-      if (result.success && isBlockChecked) {
-        useUserStore.getState().blockUser(selectedUserToReport.id, selectedUserToReport.nickname);
-      }
+      Alert.alert(
+        "신고 완료",
+        reportType === "post"
+          ? "게시글 신고가 정상적으로 접수되었습니다."
+          : "회원 신고 및 차단이 정상적으로 접수되었습니다.",
+      );
+    } catch (error) {
+      Alert.alert("오류", "신고 처리 중 문제가 발생했습니다.");
+    } finally {
+      setShowReportModal(false);
     }
-
-    setShowReportModal(false);
-    Alert.alert(
-      "신고 완료",
-      reportType === "post"
-        ? "게시글 신고가 정상적으로 접수되었습니다."
-        : "회원 신고 및 차단이 정상적으로 접수되었습니다.",
-    );
   };
 
   const handleBlock = (targetUserId: string, targetNickname: string) => {
@@ -589,16 +592,28 @@ const HomeScreen = ({ navigation }: any) => {
             renderItem={({ item }: { item: string }) => (
               <TouchableOpacity
                 onPress={() => setSelectedCategory(item)}
-                style={{
-                  backgroundColor:
-                    selectedCategory === item ? THEMES[appTheme].accent : THEMES[appTheme].surface + "66",
-                  borderColor: selectedCategory === item ? THEMES[appTheme].accent : "rgba(255,255,255,0.05)",
-                }}
-                className={`px-3.5 py-1.5 rounded-full mx-1 border`}
+                style={[
+                  {
+                    backgroundColor:
+                      selectedCategory === item ? THEMES[appTheme].accent : THEMES[appTheme].surface + "4D",
+                    borderColor: selectedCategory === item ? THEMES[appTheme].accent : "rgba(255,255,255,0.05)",
+                  },
+                  selectedCategory === item &&
+                    Platform.select({
+                      ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.4, shadowRadius: 10 },
+                      android: { elevation: 8 },
+                    }),
+                ]}
+                className={`px-5 py-2.5 rounded-full mx-1.5 border transition-all duration-300`}
               >
                 <Text
-                  style={{ color: selectedCategory === item ? THEMES[appTheme].bg : THEMES[appTheme].text }}
-                  className={`text-[12.5px] font-bold ${selectedCategory !== item && "opacity-60"}`}
+                  className={`font-bold text-xs`}
+                  style={{
+                    color: selectedCategory === item ? THEMES[appTheme].bg : THEMES[appTheme].text + "99",
+                    textShadowColor: selectedCategory === item ? "rgba(0,0,0,0.1)" : "transparent",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
+                  }}
                 >
                   {item}
                 </Text>
@@ -636,10 +651,16 @@ const HomeScreen = ({ navigation }: any) => {
             refreshing={isRefreshing}
             renderItem={({ item }: { item: Post }) => (
               <TouchableOpacity
-                activeOpacity={0.7}
+                activeOpacity={0.85}
                 onPress={() => handlePostPress(item)}
-                style={{ backgroundColor: THEMES[appTheme].surface + "66" }}
-                className="p-6 s24:p-8 rounded-[32px] mb-5 s24:mb-6 border border-white/5 shadow-sm"
+                style={{
+                  backgroundColor: THEMES[appTheme].surface + "4D",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 20,
+                }}
+                className="p-7 s24:p-8 rounded-[40px] mb-6 s24:mb-8 border border-white/10 overflow-hidden"
               >
                 <View className="mb-5 s24:mb-6">
                   <View className="flex-row justify-between items-start">
@@ -716,25 +737,33 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Floating Action Button for Recording */}
         <TouchableOpacity
           onPress={() => setShowWriteOptions(true)}
-          activeOpacity={0.8}
+          activeOpacity={0.9}
           style={[
-            { backgroundColor: THEMES[appTheme].accent },
+            {
+              backgroundColor: THEMES[appTheme].accent,
+              transform: [{ scale: 1.1 }],
+            },
             Platform.select({
-              ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.5, shadowRadius: 20 },
-              android: { elevation: 10 },
-              web: { boxShadow: `0px 0px 20px ${THEMES[appTheme].accent}80` },
+              ios: {
+                shadowColor: THEMES[appTheme].accent,
+                shadowOpacity: 0.6,
+                shadowRadius: 25,
+                shadowOffset: { width: 0, height: 12 },
+              },
+              android: { elevation: 15 },
+              web: { boxShadow: `0px 10px 30px ${THEMES[appTheme].accent}A6` },
             }),
           ]}
-          className="absolute bottom-10 right-6 w-16 h-16 s24:w-20 s24:h-20 rounded-[24px] s24:rounded-[30px] items-center justify-center shadow-2xl"
+          className="absolute bottom-12 right-8 w-16 h-16 rounded-[24px] items-center justify-center shadow-2xl"
         >
-          <Plus size={32} color={THEMES[appTheme].bg} />
+          <Plus size={32} color={THEMES[appTheme].bg} strokeWidth={3} />
         </TouchableOpacity>
 
         {/* Choice Modal for Write/Voice */}
         <Modal
           visible={showWriteOptions}
           transparent={true}
-          animationType="fade"
+          animationType="none"
           onRequestClose={() => setShowWriteOptions(false)}
         >
           <TouchableOpacity

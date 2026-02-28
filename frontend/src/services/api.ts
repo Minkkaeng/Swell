@@ -2,7 +2,8 @@
  * @description Swell API 서비스 유틸리티 (Actual Backend Integration)
  */
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
 const BASE_URL_FASTAPI = process.env.EXPO_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -159,12 +160,34 @@ export const api = {
 
   // AI/STT 관련
   stt: {
-    recognize: async () => {
+    // 음성 인식 (오디오 파일 업로드)
+    recognize: async (audioUri?: string) => {
       try {
-        const response = await fetch(`${BASE_URL}/api/stt`, { method: "POST" });
+        if (!audioUri) {
+          // URI가 없으면 기본 데모용 호출 (또는 에러 처리)
+          const response = await fetch(`${BASE_URL}/api/stt`, { method: "POST" });
+          return await response.json();
+        }
+
+        const formData = new FormData();
+        // @ts-ignore
+        formData.append("file", {
+          uri: audioUri,
+          name: "recording.m4a",
+          type: "audio/m4a",
+        });
+
+        const response = await fetch(`${BASE_URL}/api/stt`, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
         return await response.json();
       } catch (error) {
-        return { text: "오늘 하루는 정말 긴 파도 같았어요..." };
+        console.error("STT Recognize Error:", error);
+        return { success: false, text: "음성 인식에 실패했습니다." };
       }
     },
     summarize: async (text: string) => {
@@ -284,6 +307,63 @@ export const api = {
       try {
         const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
           method: "DELETE",
+        });
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
+    },
+    // 푸시 토큰 업데이트
+    updatePushToken: async (userId: string, token: string) => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/users/push-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, token }),
+        });
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
+    },
+    // 사용자 차단/해제 (Swagger: /api/users/block)
+    block: async (blockedId: string) => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/users/block`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blockedId }),
+        });
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
+    },
+    // 차단한 사용자 목록 조회 (Swagger: /api/users/blocks)
+    getBlocks: async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/users/blocks`);
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
+    },
+  },
+
+  // 신고 관련
+  reports: {
+    // 신고 접수 (Swagger: /api/reports)
+    create: async (data: {
+      targetType: "USER" | "POST" | "COMMENT";
+      targetId: string;
+      category: string;
+      reason?: string;
+    }) => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/reports`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         });
         return await response.json();
       } catch (error) {

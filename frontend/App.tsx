@@ -14,6 +14,7 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import SupportScreen from "./src/screens/SupportScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import GuideScreen from "./src/screens/GuideScreen";
+import { registerForPushNotificationsAsync } from "./src/services/notificationService";
 import "./global.css";
 import GlobalLoading from "./src/components/GlobalLoading";
 
@@ -23,6 +24,9 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // 푸시 알림 초기화
+    registerForPushNotificationsAsync();
+
     const timer = setTimeout(() => {
       setIsReady(true);
     }, 500);

@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 const axios = require("axios"); // Added axios for external API calls
 require("dotenv").config();
@@ -9,11 +9,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// [가상 DB] 사용자 정보
+// [媛??DB] ?ъ슜???뺣낫
 const mockUsers = [
   {
     id: "user1",
-    nickname: "지친신입사원",
+    nickname: "吏移쒖떊?낆궗??,
     status: "USER",
     followers: 45,
     receivedLikes: 82,
@@ -21,10 +21,10 @@ const mockUsers = [
     posts: [
       {
         id: "1",
-        title: "진짜 퇴사 마렵다.. 부장 새X 진짜",
+        title: "吏꾩쭨 ?댁궗 留덈졄??. 遺???늌 吏꾩쭨",
         content:
-          "입사한 지 한 달도 안 됐는데 오늘 회의실에서 내 기획서 면전에서 던져버림. 사람들 다 보는데 '이게 일이라고 해온 거냐'고 소리 지르는데 진짜 주먹 꽉 쥐었다. 화장실 가서 몰래 울고 왔는데 내가 왜 이런 취급 받아야 되는지 모르겠네...",
-        time: "10분 전",
+          "?낆궗??吏 ???щ룄 ???먮뒗???ㅻ뒛 ?뚯쓽?ㅼ뿉????湲고쉷??硫댁쟾?먯꽌 ?섏졇踰꾨┝. ?щ엺????蹂대뒗??'?닿쾶 ?쇱씠?쇨퀬 ?댁삩 嫄곕깘'怨??뚮━ 吏瑜대뒗??吏꾩쭨 二쇰㉨ 苑?伊먯뿀?? ?붿옣??媛??紐곕옒 ?멸퀬 ?붾뒗???닿? ???대윴 痍④툒 諛쏆븘???섎뒗吏 紐⑤Ⅴ寃좊꽕...",
+        time: "10遺???,
         likes: 45,
         comments: 12,
       },
@@ -32,7 +32,7 @@ const mockUsers = [
   },
   {
     id: "user2",
-    nickname: "알바몬24시",
+    nickname: "?뚮컮紐?4??,
     status: "USER",
     followers: 12,
     receivedLikes: 25,
@@ -40,10 +40,10 @@ const mockUsers = [
     posts: [
       {
         id: "2",
-        title: "카페 알바 첫날인데 개진상 만남",
+        title: "移댄럹 ?뚮컮 泥ル궇?몃뜲 媛쒖쭊??留뚮궓",
         content:
-          "주문 좀 늦게 받았다고 다짜고짜 나한테 욕하면서 반말하는 아저씨... 내 잘못 아닌데 사장님은 내 편 안 들어주고 무조건 죄송하다고 빌래. 나도 우리 부모님 귀한 자식인데 왜 남한테 빌어야 됨? 다 때려치우고 싶다 진짜.",
-        time: "32분 전",
+          "二쇰Ц 醫 ??쾶 諛쏆븯?ㅺ퀬 ?ㅼ쭨怨좎쭨 ?섑븳???뺥븯硫댁꽌 諛섎쭚?섎뒗 ?꾩???.. ???섎せ ?꾨땶???ъ옣?섏? ???????ㅼ뼱二쇨퀬 臾댁“嫄?二꾩넚?섎떎怨?鍮뚮옒. ?섎룄 ?곕━ 遺紐⑤떂 洹???먯떇?몃뜲 ???⑦븳??鍮뚯뼱???? ???뚮젮移섏슦怨??띕떎 吏꾩쭨.",
+        time: "32遺???,
         likes: 25,
         comments: 8,
       },
@@ -51,7 +51,7 @@ const mockUsers = [
   },
   {
     id: "user3",
-    nickname: "숨쉬고싶다",
+    nickname: "?⑥돩怨좎떢??,
     status: "USER",
     followers: 82,
     receivedLikes: 150,
@@ -59,10 +59,10 @@ const mockUsers = [
     posts: [
       {
         id: "3",
-        title: "사수의 한숨 소리가 너무 무서워",
+        title: "?ъ닔???쒖닲 ?뚮━媛 ?덈Т 臾댁꽌??,
         content:
-          "질문 하나 할 때마다 한숨 푹푹 쉬면서 '이것도 아직 몰라요?' 하는데 진짜 자존감 바닥친다. 나 나름 열심히 한다고 하는데... 내가 진짜 바보인가 싶고 내일 출근하기가 너무 무겁다. 누가 나 좀 살려줘.",
-        time: "1시간 전",
+          "吏덈Ц ?섎굹 ???뚮쭏???쒖닲 ?뱁뫗 ?щ㈃??'?닿쾬???꾩쭅 紐곕씪??' ?섎뒗??吏꾩쭨 ?먯〈媛?諛붾떏移쒕떎. ???섎쫫 ?댁떖???쒕떎怨??섎뒗??.. ?닿? 吏꾩쭨 諛붾낫?멸? ?띔퀬 ?댁씪 異쒓렐?섍린媛 ?덈Т 臾닿쾪?? ?꾧? ??醫 ?대젮以?",
+        time: "1?쒓컙 ??,
         likes: 82,
         comments: 34,
       },
@@ -70,7 +70,7 @@ const mockUsers = [
   },
   {
     id: "user4",
-    nickname: "퇴근원정대",
+    nickname: "?닿렐?먯젙?",
     status: "USER",
     followers: 56,
     receivedLikes: 120,
@@ -78,10 +78,10 @@ const mockUsers = [
     posts: [
       {
         id: "4",
-        title: "퇴근 10분 전에 일 던지는 팀장",
+        title: "?닿렐 10遺??꾩뿉 ???섏??????,
         content:
-          "팀장은 퇴근 준비하면서 나는 내일 아침까지 끝내놓으라네? 자기는 내일 연차 쓰면서ㅋㅋㅋ 이거 가스라이팅 아님? 거절하면 협업 안 되는 사람 취급하니까 아무 말도 못 하고 다시 앉았다. 진짜 숨 막혀 죽을 것 같아.",
-        time: "2시간 전",
+          "??μ? ?닿렐 以鍮꾪븯硫댁꽌 ?섎뒗 ?댁씪 ?꾩묠源뚯? ?앸궡?볦쑝?쇰꽕? ?먭린???댁씪 ?곗감 ?곕㈃?쒌뀑?뗣뀑 ?닿굅 媛?ㅻ씪?댄똿 ?꾨떂? 嫄곗젅?섎㈃ ?묒뾽 ???섎뒗 ?щ엺 痍④툒?섎땲源??꾨Т 留먮룄 紐??섍퀬 ?ㅼ떆 ?됱븯?? 吏꾩쭨 ??留됲? 二쎌쓣 寃?媛숈븘.",
+        time: "2?쒓컙 ??,
         likes: 56,
         comments: 20,
       },
@@ -89,7 +89,7 @@ const mockUsers = [
   },
   {
     id: "user5",
-    nickname: "지하철눈물녀",
+    nickname: "吏?섏쿋?덈Ъ?",
     status: "USER",
     followers: 124,
     receivedLikes: 350,
@@ -97,77 +97,77 @@ const mockUsers = [
     posts: [
       {
         id: "5",
-        title: "나만 이렇게 사는 거 아니지...?",
+        title: "?섎쭔 ?대젃寃??щ뒗 嫄??꾨땲吏...?",
         content:
-          "집에 오는 지하철 안에서 그냥 멍하니 창밖만 보는데 갑자기 눈물이 터짐. 내가 무슨 영광을 보겠다고 이렇게 모욕당하며 살아야 하나 싶다. 부모님은 내가 좋은 회사 들어가서 잘 지내는 줄 아는데... 전화로 괜찮냐고 물어보는데 아무렇지 않은 척 목소리 가다듬는 게 제일 힘들다.",
-        time: "5시간 전",
+          "吏묒뿉 ?ㅻ뒗 吏?섏쿋 ?덉뿉??洹몃깷 硫랁븯??李쎈컰留?蹂대뒗??媛묒옄湲??덈Ъ???곗쭚. ?닿? 臾댁뒯 ?곴킅??蹂닿쿋?ㅺ퀬 ?대젃寃?紐⑥슃?뱁븯硫??댁븘???섎굹 ?띕떎. 遺紐⑤떂? ?닿? 醫뗭? ?뚯궗 ?ㅼ뼱媛????吏?대뒗 以??꾨뒗??.. ?꾪솕濡?愿쒖갖?먭퀬 臾쇱뼱蹂대뒗???꾨Т?뉗? ?딆? 泥?紐⑹냼由?媛?ㅻ벉??寃??쒖씪 ?섎뱾??",
+        time: "5?쒓컙 ??,
         likes: 124,
         comments: 56,
       },
     ],
-    socialId: "kakao_test_user", // 테스트용 소셜 ID 추가
+    socialId: "kakao_test_user", // ?뚯뒪?몄슜 ?뚯뀥 ID 異붽?
   },
 ];
 
-// [가상 DB] 게시글 정보
+// [媛??DB] 寃뚯떆湲 ?뺣낫
 const mockPosts = [
   {
     id: "1",
     userId: "user1",
-    nickname: "지친신입사원",
-    category: "고민",
-    title: "진짜 퇴사 마렵다.. 부장 새X 진짜",
+    nickname: "吏移쒖떊?낆궗??,
+    category: "怨좊?",
+    title: "吏꾩쭨 ?댁궗 留덈졄??. 遺???늌 吏꾩쭨",
     content:
-      "입사한 지 한 달도 안 됐는데 오늘 회의실에서 내 기획서 면전에서 던져버림. 사람들 다 보는데 '이게 일이라고 해온 거냐'고 소리 지르는데 진짜 주먹 꽉 쥐었다. 화장실 가서 몰래 울고 왔는데 내가 왜 이런 취급 받아야 되는지 모르겠네...",
-    time: "10분 전",
+      "?낆궗??吏 ???щ룄 ???먮뒗???ㅻ뒛 ?뚯쓽?ㅼ뿉????湲고쉷??硫댁쟾?먯꽌 ?섏졇踰꾨┝. ?щ엺????蹂대뒗??'?닿쾶 ?쇱씠?쇨퀬 ?댁삩 嫄곕깘'怨??뚮━ 吏瑜대뒗??吏꾩쭨 二쇰㉨ 苑?伊먯뿀?? ?붿옣??媛??紐곕옒 ?멸퀬 ?붾뒗???닿? ???대윴 痍④툒 諛쏆븘???섎뒗吏 紐⑤Ⅴ寃좊꽕...",
+    time: "10遺???,
     likes: 45,
     comments: 12,
   },
   {
     id: "2",
     userId: "user2",
-    nickname: "알바몬24시",
-    category: "일상",
-    title: "카페 알바 첫날인데 개진상 만남",
+    nickname: "?뚮컮紐?4??,
+    category: "?쇱긽",
+    title: "移댄럹 ?뚮컮 泥ル궇?몃뜲 媛쒖쭊??留뚮궓",
     content:
-      "주문 좀 늦게 받았다고 다짜고짜 나한테 욕하면서 반말하는 아저씨... 내 잘못 아닌데 사장님은 내 편 안 들어주고 무조건 죄송하다고 빌래. 나도 우리 부모님 귀한 자식인데 왜 남한테 빌어야 됨? 다 때려치우고 싶다 진짜.",
-    time: "32분 전",
+      "二쇰Ц 醫 ??쾶 諛쏆븯?ㅺ퀬 ?ㅼ쭨怨좎쭨 ?섑븳???뺥븯硫댁꽌 諛섎쭚?섎뒗 ?꾩???.. ???섎せ ?꾨땶???ъ옣?섏? ???????ㅼ뼱二쇨퀬 臾댁“嫄?二꾩넚?섎떎怨?鍮뚮옒. ?섎룄 ?곕━ 遺紐⑤떂 洹???먯떇?몃뜲 ???⑦븳??鍮뚯뼱???? ???뚮젮移섏슦怨??띕떎 吏꾩쭨.",
+    time: "32遺???,
     likes: 25,
     comments: 8,
   },
   {
     id: "3",
     userId: "user3",
-    nickname: "숨쉬고싶다",
-    category: "위로",
-    title: "사수의 한숨 소리가 너무 무서워",
+    nickname: "?⑥돩怨좎떢??,
+    category: "?꾨줈",
+    title: "?ъ닔???쒖닲 ?뚮━媛 ?덈Т 臾댁꽌??,
     content:
-      "질문 하나 할 때마다 한숨 푹푹 쉬면서 '이것도 아직 몰라요?' 하는데 진짜 자존감 바닥친다. 나 나름 열심히 한다고 하는데... 내가 진짜 바보인가 싶고 내일 출근하기가 너무 무겁다. 누가 나 좀 살려줘.",
-    time: "1시간 전",
+      "吏덈Ц ?섎굹 ???뚮쭏???쒖닲 ?뱁뫗 ?щ㈃??'?닿쾬???꾩쭅 紐곕씪??' ?섎뒗??吏꾩쭨 ?먯〈媛?諛붾떏移쒕떎. ???섎쫫 ?댁떖???쒕떎怨??섎뒗??.. ?닿? 吏꾩쭨 諛붾낫?멸? ?띔퀬 ?댁씪 異쒓렐?섍린媛 ?덈Т 臾닿쾪?? ?꾧? ??醫 ?대젮以?",
+    time: "1?쒓컙 ??,
     likes: 82,
     comments: 34,
   },
   {
     id: "4",
     userId: "user4",
-    nickname: "퇴근원정대",
-    category: "고민",
-    title: "퇴근 10분 전에 일 던지는 팀장",
+    nickname: "?닿렐?먯젙?",
+    category: "怨좊?",
+    title: "?닿렐 10遺??꾩뿉 ???섏??????,
     content:
-      "팀장은 퇴근 준비하면서 나는 내일 아침까지 끝내놓으라네? 자기는 내일 연차 쓰면서ㅋㅋㅋ 이거 가스라이팅 아님? 거절하면 협업 안 되는 사람 취급하니까 아무 말도 못 하고 다시 앉았다. 진짜 숨 막혀 죽을 것 같아.",
-    time: "2시간 전",
+      "??μ? ?닿렐 以鍮꾪븯硫댁꽌 ?섎뒗 ?댁씪 ?꾩묠源뚯? ?앸궡?볦쑝?쇰꽕? ?먭린???댁씪 ?곗감 ?곕㈃?쒌뀑?뗣뀑 ?닿굅 媛?ㅻ씪?댄똿 ?꾨떂? 嫄곗젅?섎㈃ ?묒뾽 ???섎뒗 ?щ엺 痍④툒?섎땲源??꾨Т 留먮룄 紐??섍퀬 ?ㅼ떆 ?됱븯?? 吏꾩쭨 ??留됲? 二쎌쓣 寃?媛숈븘.",
+    time: "2?쒓컙 ??,
     likes: 56,
     comments: 20,
   },
   {
     id: "5",
     userId: "user5",
-    nickname: "지하철눈물녀",
-    category: "일상",
-    title: "나만 이렇게 사는 거 아니지...?",
+    nickname: "吏?섏쿋?덈Ъ?",
+    category: "?쇱긽",
+    title: "?섎쭔 ?대젃寃??щ뒗 嫄??꾨땲吏...?",
     content:
-      "집에 오는 지하철 안에서 그냥 멍하니 창밖만 보는데 갑자기 눈물이 터짐. 내가 무슨 영광을 보겠다고 이렇게 모욕당하며 살아야 하나 싶다. 부모님은 내가 좋은 회사 들어가서 잘 지내는 줄 아는데... 전화로 괜찮냐고 물어보는데 아무렇지 않은 척 목소리 가다듬는 게 제일 힘들다.",
-    time: "5시간 전",
+      "吏묒뿉 ?ㅻ뒗 吏?섏쿋 ?덉뿉??洹몃깷 硫랁븯??李쎈컰留?蹂대뒗??媛묒옄湲??덈Ъ???곗쭚. ?닿? 臾댁뒯 ?곴킅??蹂닿쿋?ㅺ퀬 ?대젃寃?紐⑥슃?뱁븯硫??댁븘???섎굹 ?띕떎. 遺紐⑤떂? ?닿? 醫뗭? ?뚯궗 ?ㅼ뼱媛????吏?대뒗 以??꾨뒗??.. ?꾪솕濡?愿쒖갖?먭퀬 臾쇱뼱蹂대뒗???꾨Т?뉗? ?딆? 泥?紐⑹냼由?媛?ㅻ벉??寃??쒖씪 ?섎뱾??",
+    time: "5?쒓컙 ??,
     likes: 124,
     comments: 56,
   },
@@ -175,43 +175,43 @@ const mockPosts = [
 
 // --- API Endpoints ---
 
-// 1. 게시글 목록 조회
+// 1. 寃뚯떆湲 紐⑸줉 議고쉶
 app.get("/api/posts", (req, res) => {
   console.log("API: GET /api/posts hit");
   res.status(200).json({ success: true, posts: mockPosts });
 });
 
-// 2. 게시글 작성
+// 2. 寃뚯떆湲 ?묒꽦
 app.post("/api/posts", (req, res) => {
   const { title, content, userId, category, nickname } = req.body;
   const newPost = {
     id: `post_${Date.now()}`,
     userId: userId || "anonymous",
-    nickname: nickname || "새로운파도",
+    nickname: nickname || "?덈줈?댄뙆??,
     title: title || content.substring(0, 20),
     content,
-    time: "방금 전",
+    time: "諛⑷툑 ??,
     likes: 0,
     comments: 0,
-    category: category || "일상",
+    category: category || "?쇱긽",
   };
   mockPosts.unshift(newPost);
   res.status(200).json({ success: true, post: newPost });
 });
 
-// 2-1. 게시글 삭제
+// 2-1. 寃뚯떆湲 ??젣
 app.delete("/api/posts/:id", (req, res) => {
   const { id } = req.params;
   const postIndex = mockPosts.findIndex((p) => p.id === id);
   if (postIndex !== -1) {
     mockPosts.splice(postIndex, 1);
-    res.status(200).json({ success: true, message: "게시글이 삭제되었습니다." });
+    res.status(200).json({ success: true, message: "寃뚯떆湲????젣?섏뿀?듬땲??" });
   } else {
-    res.status(404).json({ success: false, message: "게시글을 찾을 수 없습니다." });
+    res.status(404).json({ success: false, message: "寃뚯떆湲??李얠쓣 ???놁뒿?덈떎." });
   }
 });
 
-// 2-2. 게시글 수정
+// 2-2. 寃뚯떆湲 ?섏젙
 app.put("/api/posts/:id", (req, res) => {
   const { id } = req.params;
   const { content, title } = req.body;
@@ -221,11 +221,11 @@ app.put("/api/posts/:id", (req, res) => {
     if (title) post.title = title;
     res.status(200).json({ success: true, post });
   } else {
-    res.status(404).json({ success: false, message: "게시글을 찾을 수 없습니다." });
+    res.status(404).json({ success: false, message: "寃뚯떆湲??李얠쓣 ???놁뒿?덈떎." });
   }
 });
 
-// 3. 사용자 프로필 상세 조회
+// 3. ?ъ슜???꾨줈???곸꽭 議고쉶
 app.get("/api/users/profile/:userId", (req, res) => {
   const { userId } = req.params;
   let user = mockUsers.find((u) => u.id === userId);
@@ -233,13 +233,13 @@ app.get("/api/users/profile/:userId", (req, res) => {
   if (user) {
     res.status(200).json({ success: true, data: user });
   } else {
-    // mockUsers에 없는 경우(게스트 등), 최근 게시글에서 닉네임 정보를 찾아봄
+    // mockUsers???녿뒗 寃쎌슦(寃뚯뒪????, 理쒓렐 寃뚯떆湲?먯꽌 ?됰꽕???뺣낫瑜?李얠븘遊?
     const lastPost = mockPosts.find((p) => p.userId === userId);
     res.status(200).json({
       success: true,
       data: {
         id: userId,
-        nickname: lastPost ? lastPost.nickname : "익명의 너울",
+        nickname: lastPost ? lastPost.nickname : "?듬챸???덉슱",
         followers: 0,
         receivedLikes: 0,
         postCount: mockPosts.filter((p) => p.userId === userId).length,
@@ -249,14 +249,14 @@ app.get("/api/users/profile/:userId", (req, res) => {
   }
 });
 
-// 4. 팔로우 토글
+// 4. ?붾줈???좉?
 app.post("/api/users/follow", (req, res) => {
   const { followerId, followingId } = req.body;
   console.log(`Follow toggle: ${followerId} -> ${followingId}`);
-  res.status(200).json({ success: true, message: "팔로우 상태가 변경되었습니다." });
+  res.status(200).json({ success: true, message: "?붾줈???곹깭媛 蹂寃쎈릺?덉뒿?덈떎." });
 });
 
-// 4-1. 프론트엔드-백엔드 데이터 동기화 (데모용)
+// 4-1. ?꾨줎?몄뿏??諛깆뿏???곗씠???숆린??(?곕え??
 app.post("/api/users/sync", (req, res) => {
   const { userId, nickname } = req.body;
   if (!userId || !nickname) {
@@ -276,7 +276,7 @@ app.post("/api/users/sync", (req, res) => {
   res.status(200).json({ success: true, message: "Synced successfully" });
 });
 
-// 5. 댓글 작성 (Mock)
+// 5. ?볤? ?묒꽦 (Mock)
 app.post("/api/posts/:id/comments", (req, res) => {
   const { content, userId, parentId } = req.body;
   const newComment = {
@@ -285,27 +285,27 @@ app.post("/api/posts/:id/comments", (req, res) => {
     userId: userId || "anonymous",
     parentId: parentId || null,
     isMine: true,
-    time: "방금 전",
+    time: "諛⑷툑 ??,
   };
   res.status(201).json({ success: true, comment: newComment });
 });
 
-// 5-1. 댓글 삭제 (Mock)
+// 5-1. ?볤? ??젣 (Mock)
 app.delete("/api/comments/:id", (req, res) => {
-  res.status(200).json({ success: true, message: "댓글이 삭제되었습니다." });
+  res.status(200).json({ success: true, message: "?볤?????젣?섏뿀?듬땲??" });
 });
 
-// 6. 소셜 로그인 (실제 OAuth 연동)
+// 6. ?뚯뀥 濡쒓렇??(?ㅼ젣 OAuth ?곕룞)
 app.post("/api/auth/social", async (req, res) => {
   const { platform, code, redirectUri, isAccessToken, accessToken } = req.body;
-  const actualCode = code || accessToken; // 호환성 유지
+  const actualCode = code || accessToken; // ?명솚???좎?
 
   console.log(
     `API: POST /api/auth/social hit (Platform: ${platform}, Code/Token: ${actualCode}, isAccessToken: ${isAccessToken})`,
   );
 
-  // [개발용 테스트 바이패스]
-  // 'test_code'로 요청하면 real OAuth를 건너뛰고 테스트 계정으로 로그인 처리
+  // [媛쒕컻???뚯뒪??諛붿씠?⑥뒪]
+  // 'test_code'濡??붿껌?섎㈃ real OAuth瑜?嫄대꼫?곌퀬 ?뚯뒪??怨꾩젙?쇰줈 濡쒓렇??泥섎━
   if (actualCode === "test_code") {
     console.log("API: Test login bypass activated");
     const testUser = mockUsers.find((u) => u.socialId === "kakao_test_user");
@@ -313,7 +313,7 @@ app.post("/api/auth/social", async (req, res) => {
   }
 
   if (!actualCode || !redirectUri) {
-    return res.status(400).json({ success: false, message: "잘못된 요청: Auth Code나 Redirect URI가 누락되었습니다." });
+    return res.status(400).json({ success: false, message: "?섎せ???붿껌: Auth Code??Redirect URI媛 ?꾨씫?섏뿀?듬땲??" });
   }
 
   try {
@@ -329,7 +329,7 @@ app.post("/api/auth/social", async (req, res) => {
       }
 
       console.log(`Exchanging Kakao code for token. Redirect URI: ${redirectUri}`);
-      // 1. 카카오 토큰 발급
+      // 1. 移댁뭅???좏겙 諛쒓툒
       const tokenResponse = await axios.post("https://kauth.kakao.com/oauth/token", null, {
         params: {
           grant_type: "authorization_code",
@@ -344,7 +344,7 @@ app.post("/api/auth/social", async (req, res) => {
       });
       const kakaoAccessToken = tokenResponse.data.access_token;
 
-      // 2. 카카오 사용자 정보 조회
+      // 2. 移댁뭅???ъ슜???뺣낫 議고쉶
       const userResponse = await axios.get("https://kapi.kakao.com/v2/user/me", {
         headers: {
           Authorization: `Bearer ${kakaoAccessToken}`,
@@ -352,25 +352,25 @@ app.post("/api/auth/social", async (req, res) => {
         },
       });
       socialId = `kakao_${userResponse.data.id}`;
-      socialNickname = userResponse.data.kakao_account?.profile?.nickname || "카카오유저";
+      socialNickname = userResponse.data.kakao_account?.profile?.nickname || "移댁뭅?ㅼ쑀?";
     } else if (platform === "google") {
       let googleAccessToken = actualCode;
 
       if (!isAccessToken) {
-        // 기존 APK(안드로이드 클라이언트 ID로 생성된 코드)와의 호환성을 위해 안드로이드 클라이언트 ID 고정 사용
-        const googleId = process.env.GOOGLE_ANDROID_CLIENT_ID; // 안드로이드 Client ID
-        const googleSecret = ""; // 안드로이드 클라이언트는 시크릿을 전송하지 않음
+        // 湲곗〈 APK(?덈뱶濡쒖씠???대씪?댁뼵??ID濡??앹꽦??肄붾뱶)????명솚?깆쓣 ?꾪빐 ?덈뱶濡쒖씠???대씪?댁뼵??ID 怨좎젙 ?ъ슜
+        const googleId = process.env.GOOGLE_ANDROID_CLIENT_ID; // ?덈뱶濡쒖씠??Client ID
+        const googleSecret = ""; // ?덈뱶濡쒖씠???대씪?댁뼵?몃뒗 ?쒗겕由우쓣 ?꾩넚?섏? ?딆쓬
 
         if (!googleId) {
           throw new Error("Missing Google Android Client ID in environment variables");
         }
 
         console.log(`Exchanging Google code for token using Android Client ID. Redirect URI: ${redirectUri}`);
-        // 1. 구글 토큰 발급
+        // 1. 援ш? ?좏겙 諛쒓툒
         const params = new URLSearchParams();
         params.append("grant_type", "authorization_code");
         params.append("client_id", googleId);
-        // 안드로이드 클라이언트는 client_secret 파라미터 자체를 생략
+        // ?덈뱶濡쒖씠???대씪?댁뼵?몃뒗 client_secret ?뚮씪誘명꽣 ?먯껜瑜??앸왂
         params.append("redirect_uri", redirectUri);
         params.append("code", actualCode);
 
@@ -383,39 +383,39 @@ app.post("/api/auth/social", async (req, res) => {
           googleAccessToken = tokenResponse.data.access_token;
         } catch (tokenError) {
           console.error("Google Token Exchange Failed:", tokenError.response?.data || tokenError.message);
-          return res.status(400).json({ success: false, message: "Google 토큰 교환에 실패했습니다." });
+          return res.status(400).json({ success: false, message: "Google ?좏겙 援먰솚???ㅽ뙣?덉뒿?덈떎." });
         }
       } else {
         console.log("Using Google Access Token directly.");
       }
 
-      // 2. 구글 사용자 정보 조회
+      // 2. 援ш? ?ъ슜???뺣낫 議고쉶
       const userResponse = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: {
           Authorization: `Bearer ${googleAccessToken}`,
         },
       });
       socialId = `google_${userResponse.data.id}`;
-      socialNickname = userResponse.data.name || "구글유저";
+      socialNickname = userResponse.data.name || "援ш??좎?";
     }
 
     if (!socialId) {
-      return res.status(400).json({ success: false, message: "지원하지 않는 플랫폼이거나 인증에 실패했습니다." });
+      return res.status(400).json({ success: false, message: "吏?먰븯吏 ?딅뒗 ?뚮옯?쇱씠嫄곕굹 ?몄쬆???ㅽ뙣?덉뒿?덈떎." });
     }
 
-    // 3. 기존 등록 유저 확인
+    // 3. 湲곗〈 ?깅줉 ?좎? ?뺤씤
     const user = mockUsers.find((u) => u.socialId === socialId);
 
-    // 테스트 원활함을 위해 소셜 ID가 매칭안되면 user1 이라도 돌려줄지 고민할 수 있으나,
-    // 실제 연동 프로세스를 원하셨으므로 신규 가입 flow를 따릅니다.
+    // ?뚯뒪???먰솢?⑥쓣 ?꾪빐 ?뚯뀥 ID媛 留ㅼ묶?덈릺硫?user1 ?대씪???뚮젮以꾩? 怨좊??????덉쑝??
+    // ?ㅼ젣 ?곕룞 ?꾨줈?몄뒪瑜??먰븯?⑥쑝誘濡??좉퇋 媛??flow瑜??곕쫭?덈떎.
     if (user) {
       res.status(200).json({ success: true, user: user });
     } else {
-      // 미가입 유저는 회원가입 화면으로 넘어가야 함
+      // 誘멸????좎????뚯썝媛???붾㈃?쇰줈 ?섏뼱媛????
       res.status(200).json({
         success: false,
         error: "NOT_REGISTERED",
-        message: "등록되지 않은 사용자입니다.",
+        message: "?깅줉?섏? ?딆? ?ъ슜?먯엯?덈떎.",
         socialData: {
           socialId: socialId,
           nickname: socialNickname,
@@ -425,17 +425,17 @@ app.post("/api/auth/social", async (req, res) => {
     }
   } catch (error) {
     console.error("Social Auth Error:", error?.response?.data || error.message);
-    res.status(500).json({ success: false, message: "소셜 서버와 통신 중 문제가 발생했습니다." });
+    res.status(500).json({ success: false, message: "?뚯뀥 ?쒕쾭? ?듭떊 以?臾몄젣媛 諛쒖깮?덉뒿?덈떎." });
   }
 });
 
-// 5. 회원가입 (데모용)
+// 5. ?뚯썝媛??(?곕え??
 app.post("/api/auth/register", (req, res) => {
   const { nickname, gender, platform, birthYear, birthMonth, socialId } = req.body;
   const newUser = {
     id: `user_${Date.now()}`,
     socialId: socialId,
-    nickname: nickname || "새로운 너울",
+    nickname: nickname || "?덈줈???덉슱",
     gender,
     status: "USER",
     followers: 0,
@@ -450,64 +450,64 @@ app.post("/api/auth/register", (req, res) => {
   res.status(200).json({ success: true, user: newUser });
 });
 
-// 8. 알림 조회 (Mock)
+// 8. ?뚮┝ 議고쉶 (Mock)
 app.get("/api/notifications", (req, res) => {
   const { userId } = req.query;
   res.status(200).json({
     success: true,
     notifications: [
-      { id: "n1", type: "like", content: "누군가 당신의 파도에 공감했습니다.", time: "방금 전", isRead: false },
+      { id: "n1", type: "like", content: "?꾧뎔媛 ?뱀떊???뚮룄??怨듦컧?덉뒿?덈떎.", time: "諛⑷툑 ??, isRead: false },
     ],
   });
 });
 
-// 9. 게시글 반응 (좋아요/싫어요)
+// 9. 寃뚯떆湲 諛섏쓳 (醫뗭븘???レ뼱??
 app.post("/api/posts/:id/reaction", (req, res) => {
-  res.status(200).json({ success: true, message: "반응이 기록되었습니다." });
+  res.status(200).json({ success: true, message: "諛섏쓳??湲곕줉?섏뿀?듬땲??" });
 });
 
-// 10. 투표
+// 10. ?ы몴
 app.post("/api/posts/:id/vote", (req, res) => {
-  res.status(200).json({ success: true, message: "투표가 기록되었습니다." });
+  res.status(200).json({ success: true, message: "?ы몴媛 湲곕줉?섏뿀?듬땲??" });
 });
 
-// 11. 활동 기록 삭제
+// 11. ?쒕룞 湲곕줉 ??젣
 app.delete("/api/users/:id/history", (req, res) => {
   const { id } = req.params;
-  // 게시글 삭제
+  // 寃뚯떆湲 ??젣
   for (let i = mockPosts.length - 1; i >= 0; i--) {
     if (mockPosts[i].userId === id) {
       mockPosts.splice(i, 1);
     }
   }
-  // 유저 정보 초기화
+  // ?좎? ?뺣낫 珥덇린??
   const user = mockUsers.find((u) => u.id === id);
   if (user) {
     user.postCount = 0;
     user.receivedLikes = 0;
     user.posts = [];
   }
-  res.status(200).json({ success: true, message: "활동 기록이 삭제되었습니다." });
+  res.status(200).json({ success: true, message: "?쒕룞 湲곕줉????젣?섏뿀?듬땲??" });
 });
 
-// 12. 탈퇴 (계정 삭제)
+// 12. ?덊눜 (怨꾩젙 ??젣)
 app.delete("/api/users/:id", (req, res) => {
   const { id } = req.params;
   const userIndex = mockUsers.findIndex((u) => u.id === id);
   if (userIndex !== -1) {
-    mockUsers.splice(userIndex, 1); // 유저 완전 삭제
+    mockUsers.splice(userIndex, 1); // ?좎? ?꾩쟾 ??젣
 
-    // 탈퇴한 유저의 게시물은 명세(익명으로 남김)에 따라 익명화 처리
+    // ?덊눜???좎???寃뚯떆臾쇱? 紐낆꽭(?듬챸?쇰줈 ?④?)???곕씪 ?듬챸??泥섎━
     mockPosts.forEach((post) => {
       if (post.userId === id) {
         post.userId = "deleted_user";
-        post.nickname = "알 수 없는 너울";
+        post.nickname = "?????녿뒗 ?덉슱";
       }
     });
 
-    res.status(200).json({ success: true, message: "탈퇴 처리가 완료되었습니다." });
+    res.status(200).json({ success: true, message: "?덊눜 泥섎━媛 ?꾨즺?섏뿀?듬땲??" });
   } else {
-    res.status(404).json({ success: false, message: "사용자를 찾을 수 없습니다." });
+    res.status(404).json({ success: false, message: "?ъ슜?먮? 李얠쓣 ???놁뒿?덈떎." });
   }
 });
 
@@ -515,10 +515,10 @@ app.delete("/api/users/:id", (req, res) => {
 app.post("/api/stt", (req, res) => {
   res.status(200).json({
     success: true,
-    text: "오늘 하루는 정말 긴 파도 같았어요. 힘든 일이 많았지만 이렇게 너울에게 털어놓으니 조금은 마음이 가벼워지는 것 같아요.",
+    text: "?ㅻ뒛 ?섎（???뺣쭚 湲??뚮룄 媛숈븯?댁슂. ?섎뱺 ?쇱씠 留롮븯吏留??대젃寃??덉슱?먭쾶 ?몄뼱?볦쑝??議곌툑? 留덉쓬??媛踰쇱썙吏??寃?媛숈븘??",
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`너울(Swell) 서버가 포트 ${PORT}에서 작동 중입니다.`);
+  console.log(`?덉슱(Swell) ?쒕쾭媛 ?ы듃 ${PORT}?먯꽌 ?묐룞 以묒엯?덈떎.`);
 });

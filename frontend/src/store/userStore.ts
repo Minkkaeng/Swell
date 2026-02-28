@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../services/api";
 
 export type UserStatus = "GUEST" | "USER" | "VIP";
 
@@ -34,6 +35,7 @@ interface UserState {
   myReportedPostIds: string[]; // 내가 신고한 게시글 ID 목록
   myReportedUserIds: string[]; // 내가 신고한 회원 ID 목록
   birthYear: string | null; // 사용자 생년
+  pushToken: string | null; // 푸시 알림 토큰 추가
 
   // Actions
   setStatus: (status: UserStatus) => void;
@@ -45,11 +47,11 @@ interface UserState {
   setGlobalLoading: (loading: boolean) => void;
   setAppTheme: (theme: "midnight" | "ocean" | "sunset" | "forest") => void;
   setNotificationsEnabled: (enabled: boolean) => void;
-  reportPost: (postId: string) => { success: boolean; message: string }; // 게시글 신고
-  reportUser: (userId: string, reason: string) => { success: boolean; message: string }; // 회원 신고
+  reportPost: (postId: string, category?: string) => Promise<{ success: boolean; message: string }>; // 게시글 신고
+  reportUser: (userId: string, reason: string, category?: string) => Promise<{ success: boolean; message: string }>; // 회원 신고
   setPenalty: (level: number, days: number, reason: string) => void; // 제재 액션
-  blockUser: (id: string, nickname: string) => void;
-  unblockUser: (id: string) => void;
+  blockUser: (id: string, nickname: string) => Promise<{ success: boolean; message: string }>;
+  unblockUser: (id: string) => Promise<{ success: boolean; message: string }>;
   useToken: () => boolean;
   toggleFollow: (userId: string, nickname?: string) => void;
   buyTokens: (amount: number) => void;
@@ -61,6 +63,7 @@ interface UserState {
   setSecretMode: (active: boolean) => void;
   setAppPassword: (password: string | null) => void;
   setMarketingAccepted: (accepted: boolean) => void;
+  setPushToken: (token: string | null) => void;
   resetStore: () => void;
 }
 
@@ -105,6 +108,7 @@ export const useUserStore = create<UserState>()(
       myReportedPostIds: [],
       myReportedUserIds: [],
       birthYear: null,
+      pushToken: null,
 
       setStatus: (status) => set({ status }),
       setUserId: (id) => set({ userId: id }),
@@ -117,24 +121,36 @@ export const useUserStore = create<UserState>()(
       setSecretMode: (active) => set({ isSecretModeActive: active }),
       setAppPassword: (password) => set({ appPassword: password }),
       setMarketingAccepted: (accepted) => set({ isMarketingAccepted: accepted }),
+      setPushToken: (token) => set({ pushToken: token }),
 
-      reportPost: (postId: string) => {
+      reportPost: async (postId: string, category = "부적절한 내용") => {
         const { myReportedPostIds } = get();
         if (myReportedPostIds.includes(postId)) {
           return { success: false, message: "이미 신고한 게시글입니다." };
         }
 
-        set((state) => {
-          const currentCount = state.reportCounts[postId] || 0;
-          return {
-            reportCounts: {
-              ...state.reportCounts,
-              [postId]: currentCount + 1,
-            },
-            myReportedPostIds: [...state.myReportedPostIds, postId],
-          };
-        });
-        return { success: true, message: "게시글 신고가 접수되었습니다." };
+        try {
+          await api.reports.create({
+            targetType: "POST",
+            targetId: postId,
+            category: category,
+          });
+
+          set((state) => {
+            const currentCount = state.reportCounts[postId] || 0;
+            return {
+              reportCounts: {
+                ...state.reportCounts,
+                [postId]: currentCount + 1,
+              },
+              myReportedPostIds: [...state.myReportedPostIds, postId],
+            };
+          });
+          return { success: true, message: "게시글 신고가 접수되었습니다." };
+        } catch (error) {
+          console.error("Report Post API Error:", error);
+          return { success: false, message: "신고 전송에 실패했습니다." };
+        }
       },
 
       setPenalty: (level, days, reason) => {
@@ -142,42 +158,74 @@ export const useUserStore = create<UserState>()(
         set({ penalty: { level, expiresAt, reason } });
       },
 
-      reportUser: (targetUserId, reason) => {
+      reportUser: async (targetUserId, reason, category = "부적절한 회원") => {
         const { myReportedUserIds } = get();
         if (myReportedUserIds.includes(targetUserId)) {
           return { success: false, message: "이미 신고한 회원입니다." };
         }
 
-        set((state) => {
-          const currentCount = (state.userReportCounts[targetUserId] || 0) + 1;
-          const nextUserReportCounts = { ...state.userReportCounts, [targetUserId]: currentCount };
-          const nextMyReportedUserIds = [...state.myReportedUserIds, targetUserId];
+        try {
+          await api.reports.create({
+            targetType: "USER",
+            targetId: targetUserId,
+            category: category,
+            reason: reason,
+          });
 
-          // 패널티 판정 로직은 추후 백엔드에서 전담하고,
-          // 프론트엔드는 서버에서 전달받은 상태(status: "BANNED" 등)만 반영하도록 가볍게 관리합니다.
+          set((state) => {
+            const currentCount = (state.userReportCounts[targetUserId] || 0) + 1;
+            const nextUserReportCounts = { ...state.userReportCounts, [targetUserId]: currentCount };
+            const nextMyReportedUserIds = [...state.myReportedUserIds, targetUserId];
 
-          return { userReportCounts: nextUserReportCounts, myReportedUserIds: nextMyReportedUserIds };
-        });
+            return { userReportCounts: nextUserReportCounts, myReportedUserIds: nextMyReportedUserIds };
+          });
 
-        return { success: true, message: "회원 신고가 접수되었습니다." };
+          return { success: true, message: "회원 신고가 접수되었습니다." };
+        } catch (error) {
+          console.error("Report User API Error:", error);
+          return { success: false, message: "신고 전송에 실패했습니다." };
+        }
       },
 
-      blockUser: (id, nickname) => {
+      blockUser: async (id, nickname) => {
         const { blockedUsers } = get();
-        if (blockedUsers.find((u) => u.id === id)) return;
+        if (blockedUsers.find((u) => u.id === id)) {
+          return { success: false, message: "이미 차단된 사용자입니다." };
+        }
 
-        const now = new Date();
-        const blockedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+        try {
+          const response = await api.users.block(id);
+          // 서버에서 차단 처리가 성공적으로 되었을 때만 로컬 상태 업데이트
+          if (response.blocked) {
+            const now = new Date();
+            const blockedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
 
-        set({
-          blockedUsers: [...blockedUsers, { id, nickname, blockedAt }],
-        });
+            set({
+              blockedUsers: [...blockedUsers, { id, nickname, blockedAt }],
+            });
+            return { success: true, message: "사용자를 차단했습니다." };
+          }
+          return { success: false, message: "차단 처리에 실패했습니다." };
+        } catch (error) {
+          console.error("Block User API Error:", error);
+          return { success: false, message: "차단 요청 중 오류가 발생했습니다." };
+        }
       },
 
-      unblockUser: (id) => {
-        set((state) => ({
-          blockedUsers: state.blockedUsers.filter((u) => u.id !== id),
-        }));
+      unblockUser: async (id) => {
+        try {
+          const response = await api.users.block(id); // toggle 이므로 다시 호출하면 해제됨
+          if (!response.blocked) {
+            set((state) => ({
+              blockedUsers: state.blockedUsers.filter((u) => u.id !== id),
+            }));
+            return { success: true, message: "차단을 해제했습니다." };
+          }
+          return { success: false, message: "차단 해제에 실패했습니다." };
+        } catch (error) {
+          console.error("Unblock User API Error:", error);
+          return { success: false, message: "차단 해제 요청 중 오류가 발생했습니다." };
+        }
       },
 
       toggleFollow: (userId: string, nickname?: string) => {
@@ -352,6 +400,7 @@ export const useUserStore = create<UserState>()(
           isSecretModeActive: false,
           appPassword: null,
           isMarketingAccepted: false,
+          pushToken: null,
         });
       },
     }),
