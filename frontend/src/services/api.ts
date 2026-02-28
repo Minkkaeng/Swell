@@ -2,8 +2,11 @@
  * @description Swell API 서비스 유틸리티 (Actual Backend Integration)
  */
 
+const isWeb = typeof window !== "undefined";
 const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://10.0.2.2:3000" : "https://swell-backend.onrender.com");
+  isWeb && window.location.hostname !== "localhost"
+    ? "https://swell-backend.onrender.com"
+    : process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:3000";
 const BASE_URL_FASTAPI = process.env.EXPO_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

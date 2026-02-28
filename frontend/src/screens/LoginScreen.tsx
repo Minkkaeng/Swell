@@ -264,8 +264,8 @@ const LoginScreen = ({ navigation }: any) => {
             )}
           </TouchableOpacity>
 
-          {/* 웹 테스트 환경 또는 개발용 테스트 로그인 버튼 */}
-          {(Platform.OS === "web" || __DEV__) && (
+          {/* 임시 UI 확인용 우회 버튼 (모든 환경 노출) */}
+          {true && (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => handleAuthComplete("test", "test_code")}
