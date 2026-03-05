@@ -2,9 +2,11 @@
  * @description Swell API 서비스 유틸리티 (Actual Backend Integration)
  */
 
-const isWeb = typeof window !== "undefined";
+import { Platform } from "react-native";
+
+const isWeb = Platform.OS === "web";
 const BASE_URL =
-  isWeb && window.location.hostname !== "localhost"
+  isWeb && typeof window !== "undefined" && window.location?.hostname !== "localhost"
     ? "https://swell-backend.onrender.com"
     : process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:3000";
 const BASE_URL_FASTAPI = process.env.EXPO_PUBLIC_FASTAPI_URL || "http://localhost:8000";

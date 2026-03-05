@@ -207,6 +207,7 @@ const LoginScreen = ({ navigation }: any) => {
       console.error("[Login Error]", error);
       Alert.alert("오류", "서버와의 통신이 원활하지 않습니다.");
     } finally {
+      isProcessingRef.current = false;
       setIsLoggingIn(false);
       stopLoading();
     }
