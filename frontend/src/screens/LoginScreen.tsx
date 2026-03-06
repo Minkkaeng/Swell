@@ -1,46 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Dimensions,
   Alert,
   Platform,
 } from "react-native";
-import { CheckSquare, Square, X, MessageCircle, Waves } from "lucide-react-native";
+import { CheckSquare, Square } from "lucide-react-native";
 import { Linking } from "react-native";
 import WaveLogo from "../components/WaveLogo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useGlobalLoader } from "../hooks/useGlobalLoader";
 import { useUserStore } from "../store/userStore";
 import { THEMES } from "../styles/theme";
 import { api } from "../services/api";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 
 WebBrowser.maybeCompleteAuthSession();
 
 /**
  * @description 소셜 로그인 연동 중심의 로그인 화면
  */
-const LoginScreen = ({ navigation }: any) => {
+const LoginScreen = () => {
+  const navigation = useNavigation<any>();
   const [isAutoLogin, setIsAutoLogin] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { startLoading, stopLoading } = useGlobalLoader();
-  const { setStatus, setUserId, setNickname, nickname, hasSeenGuide, appTheme } = useUserStore();
+  const { setStatus, setUserId, setNickname, hasSeenGuide, appTheme } = useUserStore();
 
-  // 플랫폼별 리다이렉트 URI 설정 (Web vs Native 대응)
-  const redirectUri = AuthSession.makeRedirectUri({
-    // 웹에서는 현재 도메인을 사용하고, 네이티브에서는 프록시/딥링크 사용
-    path: Platform.OS === "web" ? undefined : "oauth",
-  });
-
-  const returnUrl = redirectUri;
+  // 자체 백엔드 프록시 주소 (카카오/구글 콘솔에 등록할 유일한 주소)
+  const redirectUri = "https://swell-backend.onrender.com/api/auth/proxy";
 
   console.log(`[Auth] Platform: ${Platform.OS}, Redirect URI: ${redirectUri}`);
 
-  // 카카오 로그인 요청 설정
+  // === 카카오 로그인 설정 ===
   const [kakaoRequest, kakaoResponse, promptKakaoAsync] = AuthSession.useAuthRequest(
     {
       clientId: process.env.EXPO_PUBLIC_KAKAO_CLIENT_ID || "",
@@ -49,10 +46,10 @@ const LoginScreen = ({ navigation }: any) => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" },
+    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" }
   );
 
-  // 구글 로그인 요청 설정
+  // === 구글 로그인 설정 ===
   const [googleRequest, googleResponse, promptGoogleAsync] = AuthSession.useAuthRequest(
     {
       clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "",
@@ -61,106 +58,35 @@ const LoginScreen = ({ navigation }: any) => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" },
+    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" }
   );
 
-  const googleVerifierRef = React.useRef<string | null>(null);
-  const kakaoVerifierRef = React.useRef<string | null>(null);
-  const activePlatformRef = React.useRef<string | null>(null);
+  const activePlatformRef = useRef<string | null>(null);
+  const isProcessingRef = useRef<boolean>(false);
+  const kakaoVerifierRef = useRef<string | null>(null);
+  const googleVerifierRef = useRef<string | null>(null);
 
+  // Verifier 동기화 및 유지
   useEffect(() => {
     if (kakaoRequest?.codeVerifier) {
       kakaoVerifierRef.current = kakaoRequest.codeVerifier;
-      console.log("[Auth] Kakao Code Verifier Captured");
+      AsyncStorage.setItem("kakao_verifier", kakaoRequest.codeVerifier);
+      console.log("[Auth] Kakao Verifier saved:", kakaoRequest.codeVerifier.substring(0, 5) + "...");
     }
   }, [kakaoRequest]);
 
   useEffect(() => {
     if (googleRequest?.codeVerifier) {
       googleVerifierRef.current = googleRequest.codeVerifier;
-      console.log("[Auth] Google Code Verifier Captured");
+      AsyncStorage.setItem("google_verifier", googleRequest.codeVerifier);
+      console.log("[Auth] Google Verifier saved:", googleRequest.codeVerifier.substring(0, 5) + "...");
     }
   }, [googleRequest]);
 
-  // 1. 딥링크 직접 수신 리스너 (보험용)
-  useEffect(() => {
-    const handleUrl = async (url: string) => {
-      console.log("[Auth] Deep Link Detected:", url);
-      if (url.includes("swell://oauth")) {
-        const query = url.split("?")[1];
-        if (query) {
-          // URLSearchParams가 지원되지 않을 수 있으므로 수동 파싱
-          const params: Record<string, string> = {};
-          query.split("&").forEach((part) => {
-            const parts = part.split("=");
-            const key = parts[0];
-            const value = parts[1] ? decodeURIComponent(parts[1]) : "";
-            params[key] = value;
-          });
-
-          if (params.code) {
-            console.log("[Auth] Code found in deep link, processing...");
-            const provider = activePlatformRef.current || (url.includes("google") ? "google" : "kakao");
-            // Ref에서 직접 추출 (상태 지연 방지)
-            const verifier = provider === "kakao" ? kakaoVerifierRef.current : googleVerifierRef.current;
-            handleAuthComplete(provider, params.code, verifier || undefined);
-          }
-        }
-      }
-    };
-
-    // 앱이 꺼져있을 때 딥링크로 켜진 경우
-    Linking.getInitialURL().then((url) => {
-      if (url) handleUrl(url);
-    });
-
-    // 앱이 켜져있을 때 딥링크가 온 경우
-    const subscription = Linking.addEventListener("url", (event) => {
-      handleUrl(event.url);
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  useEffect(() => {
-    if (kakaoResponse?.type === "success" && kakaoResponse.params.code) {
-      handleAuthComplete("kakao", kakaoResponse.params.code, kakaoVerifierRef.current || undefined);
-    } else if (kakaoResponse?.type === "error") {
-      console.log("[Kakao Auth Error]", kakaoResponse.error);
-      Alert.alert("로그인 실패", kakaoResponse.error?.message || "카카오 로그인에 실패했습니다.");
-    }
-  }, [kakaoResponse]);
-
-  useEffect(() => {
-    if (googleResponse?.type === "success" && googleResponse.params.code) {
-      handleAuthComplete("google", googleResponse.params.code, googleVerifierRef.current || undefined);
-    } else if (googleResponse?.type === "error") {
-      console.log("[Google Auth Error]", googleResponse.error);
-      Alert.alert("로그인 실패", googleResponse.error?.message || "Google 로그인에 실패했습니다.");
-    }
-  }, [googleResponse]);
-
   /**
-   * @description 소셜 로그인 버튼 클릭 시 실행
+   * @description 백엔드로 인가 코드와 검증기(PKCE), 프록시 Redirect URI 전달
    */
-  const handleSocialLogin = async (platform: string) => {
-    activePlatformRef.current = platform; // 현재 시도 중인 플랫폼 기억
-    if (platform === "kakao") {
-      console.log("[Auth] Kakao Login Attempt (Production Flow):", { redirectUri });
-      await promptKakaoAsync();
-    } else if (platform === "google") {
-      const currentClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
-      console.log("[Auth] Google Login Attempt (Production Flow):", { currentClientId, redirectUri });
-      await promptGoogleAsync();
-    }
-  };
-
-  const isProcessingRef = React.useRef(false);
-
-  /**
-   * @description 실제 인증 코드 백엔드 전송
-   */
-  const handleAuthComplete = async (provider: string, accessToken: string, codeVerifier?: string) => {
+  const handleAuthComplete = async (provider: string, code: string, codeVerifier?: string) => {
     if (isProcessingRef.current) {
       console.log("[Auth] Already processing a login request, skipping...");
       return;
@@ -169,12 +95,12 @@ const LoginScreen = ({ navigation }: any) => {
     try {
       isProcessingRef.current = true;
       setIsLoggingIn(true);
-      console.log(`[Auth] handleAuthComplete triggered for ${provider}. PKCE: ${!!codeVerifier}`);
-      console.log(`[Auth] Using Redirect URI for verification: ${redirectUri}`);
+      console.log(`[Auth] handleAuthComplete triggered for ${provider}. Code mode.`);
       startLoading(500);
 
-      const response = await api.auth.socialLogin(provider, accessToken, redirectUri, codeVerifier);
-      console.log(`[Auth] Backend Response for ${provider}:`, response.success);
+      console.log(`[Auth] Calling api.auth.socialLogin for ${provider}...`);
+      const response = await api.auth.socialLogin(provider, code, redirectUri, codeVerifier);
+      console.log(`[Auth] Backend Response for ${provider}:`, response);
 
       if (response.success && response.user) {
         setStatus(response.user.status || "USER");
@@ -182,13 +108,11 @@ const LoginScreen = ({ navigation }: any) => {
         if (response.user.nickname) setNickname(response.user.nickname);
 
         if (hasSeenGuide) {
-          // 가이드인 경우 홈으로
           navigation.reset({
             index: 0,
             routes: [{ name: "Home" }],
           });
         } else {
-          // 가이드가 처음인 경우 가이드로
           navigation.replace("Guide");
         }
       } else if (response.error === "NOT_REGISTERED") {
@@ -207,9 +131,122 @@ const LoginScreen = ({ navigation }: any) => {
       console.error("[Login Error]", error);
       Alert.alert("오류", "서버와의 통신이 원활하지 않습니다.");
     } finally {
-      isProcessingRef.current = false;
       setIsLoggingIn(false);
+      isProcessingRef.current = false;
       stopLoading();
+    }
+  };
+
+  /**
+   * @description 딥링크 리스너 (강제 캐치용)
+   */
+  useEffect(() => {
+    const handleUrl = async (url: string) => {
+      console.log("[Auth] Deep Link Detected:", url);
+      if (url.includes("swell://oauth")) {
+        const query = url.split("?")[1] || url.split("#")[1]; // 토큰은 보통 해시(#)로 옴
+        if (query) {
+          const params: Record<string, string> = {};
+          query.split("&").forEach((part) => {
+            const parts = part.split("=");
+            const key = parts[0];
+            const value = parts[1] ? decodeURIComponent(parts[1]) : "";
+            params[key] = value;
+          });
+
+          const code = params.code;
+          console.log(`[Auth] Parsed deep link params. Code exists? ${!!code}`);
+          if (code) {
+            console.log("[Auth] Code found in deep link, processing...");
+            const provider = activePlatformRef.current || (url.includes("google") ? "google" : "kakao");
+
+            // 1. Ref 확인, 2. State 확인, 3. AsyncStorage 확인
+            let codeVerifier = provider === "google"
+              ? (googleVerifierRef.current || googleRequest?.codeVerifier)
+              : (kakaoVerifierRef.current || kakaoRequest?.codeVerifier);
+
+            if (!codeVerifier) {
+              const savedVerifier = await AsyncStorage.getItem(`${provider}_verifier`);
+              if (savedVerifier) {
+                codeVerifier = savedVerifier;
+                console.log(`[Auth] Recovered ${provider} verifier from AsyncStorage`);
+              }
+            }
+
+            console.log(`[Auth] Final Check - Provider: ${provider}, Code: ${code.substring(0, 10)}..., Verifier: ${codeVerifier ? "FOUND" : "NOT FOUND"}`);
+            handleAuthComplete(provider, code, codeVerifier || undefined);
+          } else {
+            console.log("[Auth] No code found in deep link params. Params:", params);
+            stopLoading();
+          }
+        }
+      }
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl(url);
+    });
+
+    const subscription = Linking.addEventListener("url", (event) => {
+      handleUrl(event.url);
+    });
+
+    return () => subscription.remove();
+  }, [googleRequest, kakaoRequest]);
+
+  /**
+   * @description Expo AuthSession 응답 처리
+   */
+  useEffect(() => {
+    if (kakaoResponse?.type === "success") {
+      const code = kakaoResponse.params.code;
+      if (code) {
+        console.log("[Auth] Kakao Auth Success, Code:", code.substring(0, 10) + "...");
+        handleAuthComplete("kakao", code, kakaoRequest?.codeVerifier);
+      } else {
+        Alert.alert("인증 오류", "카카오로부터 인증 코드를 받지 못했습니다.");
+      }
+    } else if (kakaoResponse?.type === "error") {
+      console.log("[Kakao Auth Error]", kakaoResponse.error);
+      Alert.alert("로그인 실패", kakaoResponse.error?.message || "카카오 로그인에 실패했습니다.");
+    }
+  }, [kakaoResponse]);
+
+  useEffect(() => {
+    if (googleResponse?.type === "success") {
+      const code = googleResponse.params.code;
+      if (code) {
+        console.log("[Auth] Google Auth Success, Code:", code.substring(0, 10) + "...");
+        handleAuthComplete("google", code, googleRequest?.codeVerifier);
+      } else {
+        Alert.alert("인증 오류", "Google로부터 인증 코드를 받지 못했습니다.");
+      }
+    } else if (googleResponse?.type === "error") {
+      console.log("[Google Auth Error]", googleResponse.error);
+      Alert.alert("로그인 실패", googleResponse.error?.message || "Google 로그인에 실패했습니다.");
+    }
+  }, [googleResponse]);
+
+  const handleSocialLogin = async (platform: string) => {
+    activePlatformRef.current = platform; // 현재 시도 중인 플랫폼 기억
+
+    if (platform === "kakao") {
+      // [Bulletproof] 브라우저 이동 전 암호키를 저장소에 확실히 박아넣음
+      if (kakaoRequest?.codeVerifier) {
+        await AsyncStorage.setItem("kakao_verifier", kakaoRequest.codeVerifier);
+        kakaoVerifierRef.current = kakaoRequest.codeVerifier;
+        console.log("[Auth] Kakao Verifier strictly saved before prompt.");
+      }
+      console.log("[Auth] Kakao Login Attempt:", { redirectUri });
+      await promptKakaoAsync();
+    } else if (platform === "google") {
+      if (googleRequest?.codeVerifier) {
+        await AsyncStorage.setItem("google_verifier", googleRequest.codeVerifier);
+        googleVerifierRef.current = googleRequest.codeVerifier;
+        console.log("[Auth] Google Verifier strictly saved before prompt.");
+      }
+      console.log("[Auth] Google Login Attempt:", { redirectUri });
+      await promptGoogleAsync();
     }
   };
 

@@ -56,11 +56,11 @@ class MainApplication : Application(), ReactApplication {
         val stackTrace = sw.toString()
         
         try {
-            val intent = Intent(applicationContext, CrashActivity::class.java).apply {
-                putExtra("stacktrace", stackTrace)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            }
-            startActivity(intent)
+            // val intent = Intent(applicationContext, CrashActivity::class.java).apply {
+            //     putExtra("stacktrace", stackTrace)
+            //     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            // }
+            // startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
         }
