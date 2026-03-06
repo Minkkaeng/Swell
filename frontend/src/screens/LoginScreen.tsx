@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Dimensions, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Dimensions,
+  Alert,
+  Platform,
+} from "react-native";
 import { CheckSquare, Square, X, MessageCircle, Waves } from "lucide-react-native";
 import { Linking } from "react-native";
 import WaveLogo from "../components/WaveLogo";
@@ -21,19 +30,15 @@ const LoginScreen = ({ navigation }: any) => {
   const { startLoading, stopLoading } = useGlobalLoader();
   const { setStatus, setUserId, setNickname, nickname, hasSeenGuide, appTheme } = useUserStore();
 
-  // 카카오/구글 콘솔의 리다이렉트 URI 제약(HTTP/HTTPS 강제)을 우회하기 위한 프록시 URL
-  // 앱(프론트엔드)은 이 HTTP 주소로 보냅니다 -> 백엔드(/api/auth/callback)가 받음 -> 백엔드가 강제로 앱(swell://oauth)으로 던짐
-  const PROXY_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/callback`;
-
-  const redirectUri = PROXY_URL;
-
-  // 인앱 브라우저가 돌아올 때 받을 딥링크 주소를 리스너에 명시 (백엔드가 여기로 던지면 앱이 잡음)
-  const returnUrl = AuthSession.makeRedirectUri({
-    scheme: "swell",
-    path: "oauth",
+  // 플랫폼별 리다이렉트 URI 설정 (Web vs Native 대응)
+  const redirectUri = AuthSession.makeRedirectUri({
+    // 웹에서는 현재 도메인을 사용하고, 네이티브에서는 프록시/딥링크 사용
+    path: Platform.OS === "web" ? undefined : "oauth",
   });
 
-  console.log("[Auth] Setup -> Proxy:", redirectUri, " / Native Return:", returnUrl);
+  const returnUrl = redirectUri;
+
+  console.log(`[Auth] Platform: ${Platform.OS}, Redirect URI: ${redirectUri}`);
 
   // 카카오 로그인 요청 설정
   const [kakaoRequest, kakaoResponse, promptKakaoAsync] = AuthSession.useAuthRequest(
@@ -44,7 +49,7 @@ const LoginScreen = ({ navigation }: any) => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" }
+    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" },
   );
 
   // 구글 로그인 요청 설정
@@ -56,7 +61,7 @@ const LoginScreen = ({ navigation }: any) => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" }
+    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" },
   );
 
   const googleVerifierRef = React.useRef<string | null>(null);
@@ -86,7 +91,7 @@ const LoginScreen = ({ navigation }: any) => {
         if (query) {
           // URLSearchParams가 지원되지 않을 수 있으므로 수동 파싱
           const params: Record<string, string> = {};
-          query.split("&").forEach(part => {
+          query.split("&").forEach((part) => {
             const parts = part.split("=");
             const key = parts[0];
             const value = parts[1] ? decodeURIComponent(parts[1]) : "";
@@ -202,6 +207,7 @@ const LoginScreen = ({ navigation }: any) => {
       console.error("[Login Error]", error);
       Alert.alert("오류", "서버와의 통신이 원활하지 않습니다.");
     } finally {
+      isProcessingRef.current = false;
       setIsLoggingIn(false);
       stopLoading();
     }
@@ -220,55 +226,55 @@ const LoginScreen = ({ navigation }: any) => {
       />
 
       <View className="flex-1 px-8 justify-center">
-        <View className="mb-12 pt-10 items-center">
+        <View className="mb-8 pt-6 items-center">
           <View
             style={{ backgroundColor: THEMES[appTheme].accent + "1A" }}
-            className="w-28 h-28 rounded-[40px] items-center justify-center border border-white/5 shadow-2xl mb-8"
+            className="w-20 h-20 rounded-[30px] items-center justify-center border border-white/5 shadow-2xl mb-6"
           >
-            <WaveLogo size={60} color={THEMES[appTheme].accent} />
+            <WaveLogo size={40} color={THEMES[appTheme].accent} />
           </View>
           <Text
             style={{ color: THEMES[appTheme].text }}
-            className="text-[44px] font-black leading-tight tracking-tighter text-center"
+            className="text-3xl font-black leading-tight tracking-tighter text-center"
           >
             너울
           </Text>
         </View>
 
-        <View className="mb-14 items-center">
+        <View className="mb-10 items-center">
           <Text
             style={{ color: THEMES[appTheme].text }}
-            className="opacity-40 text-center text-base leading-7 font-medium"
+            className="opacity-40 text-center text-xs leading-5 font-medium"
           >
             정제되지 않은 진심을 쏟아내는{"\n"}익명 성인 커뮤니티
           </Text>
         </View>
 
         {/* Social Buttons Section */}
-        <View className="space-y-4 mb-10">
+        <View className="space-y-4 mb-8">
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => handleSocialLogin("kakao")}
             disabled={isLoggingIn}
-            className="bg-[#FEE500] h-[68px] rounded-[28px] flex-row items-center justify-center shadow-2xl mb-5"
+            className="bg-[#FEE500] h-[56px] rounded-[24px] flex-row items-center justify-center shadow-lg mb-4"
           >
             {isLoggingIn ? (
               <ActivityIndicator color="#191919" />
             ) : (
-              <Text className="text-[#191919] text-xl font-bold">카카오톡 로그인</Text>
+              <Text className="text-[#191919] text-lg font-bold">카카오톡 로그인</Text>
             )}
           </TouchableOpacity>
 
-          {/* 개발용 테스트 로그인 버튼 */}
-          {__DEV__ && (
+          {/* 임시 UI 확인용 우회 버튼 (모든 환경 노출) */}
+          {true && (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => handleAuthComplete("test", "test_code")}
               disabled={isLoggingIn}
               style={{ borderColor: THEMES[appTheme].accent, borderStyle: "dashed" }}
-              className="h-[60px] rounded-[28px] flex-row items-center justify-center border mb-10"
+              className="h-[52px] rounded-[24px] flex-row items-center justify-center border mb-6"
             >
-              <Text style={{ color: THEMES[appTheme].accent }} className="text-lg font-bold">
+              <Text style={{ color: THEMES[appTheme].accent }} className="text-base font-bold">
                 [Dev] API 연결 테스트 (Bypass)
               </Text>
             </TouchableOpacity>
@@ -278,12 +284,12 @@ const LoginScreen = ({ navigation }: any) => {
             activeOpacity={0.8}
             onPress={() => handleSocialLogin("google")}
             disabled={isLoggingIn}
-            className="bg-white h-[68px] rounded-[28px] flex-row items-center justify-center shadow-2xl mb-10"
+            className="bg-white h-[56px] rounded-[24px] flex-row items-center justify-center shadow-lg mb-8"
           >
             {isLoggingIn ? (
               <ActivityIndicator color="#191919" />
             ) : (
-              <Text className="text-[#191919] text-xl font-bold">Google 로그인</Text>
+              <Text className="text-[#191919] text-lg font-bold">Google 로그인</Text>
             )}
           </TouchableOpacity>
 

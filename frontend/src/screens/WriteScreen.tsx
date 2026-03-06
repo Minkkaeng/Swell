@@ -16,7 +16,6 @@ import { Modal } from "react-native";
 import { api } from "../services/api";
 import { useUserStore } from "../store/userStore";
 import { THEMES } from "../styles/theme";
-import Animated, { FadeInUp } from "react-native-reanimated";
 
 const CATEGORIES = ["고민", "일상", "위로", "질문"];
 
@@ -238,15 +237,17 @@ const WriteScreen = ({ navigation }: any) => {
 
           {/* Text Input Area */}
           <View
-            style={{ backgroundColor: THEMES[appTheme].surface + "33" }}
-            className="rounded-[40px] p-8 border border-white/5 min-h-[250px]"
+            style={{ backgroundColor: THEMES[appTheme].surface + "4D" }}
+            className="rounded-[40px] p-10 border border-white/10 min-h-[350px] shadow-sm"
           >
-            <Text className="text-[#E0E0E0]/40 text-xs font-bold mb-4 tracking-widest uppercase">Content</Text>
+            <Text className="text-[#E0E0E0]/30 text-[10px] font-black mb-6 tracking-[4px] uppercase">
+              Content Archive
+            </Text>
             <TextInput
               multiline
               placeholder="지금 당신의 마음속에 어떤 파도가 일고 있나요?"
               placeholderTextColor="#E0E0E020"
-              className="text-[#E0E0E0] text-lg leading-8"
+              className="text-[#E0E0E0] text-[18px] leading-[34px] font-medium"
               value={content}
               onChangeText={setContent}
               textAlignVertical="top"
@@ -278,16 +279,13 @@ const WriteScreen = ({ navigation }: any) => {
               </TouchableOpacity>
 
               {aiSummary && (
-                <Animated.View
-                  entering={FadeInUp}
-                  className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10"
-                >
+                <View className="mt-4 p-6 bg-[#002845]/40 rounded-[30px] border border-[#00E0D0]/10">
                   <View className="flex-row items-center mb-3">
                     <Sparkles size={14} color="#00E0D0" opacity={0.6} />
                     <Text className="text-[#00E0D0]/60 text-xs font-bold ml-2">AI 프리뷰 요약</Text>
                   </View>
                   <Text className="text-[#E0E0E0] text-[14px] leading-6 font-light">{aiSummary}</Text>
-                </Animated.View>
+                </View>
               )}
             </View>
           )}
@@ -303,7 +301,7 @@ const WriteScreen = ({ navigation }: any) => {
         </ScrollView>
 
         {/* Community Guidelines Modal */}
-        <Modal visible={showGuide} transparent={true} animationType="fade" onRequestClose={() => setShowGuide(false)}>
+        <Modal visible={showGuide} transparent={true} animationType="none" onRequestClose={() => setShowGuide(false)}>
           <View className="flex-1 bg-black/80 items-center justify-center p-8">
             <View
               style={{ backgroundColor: THEMES[appTheme].surface }}

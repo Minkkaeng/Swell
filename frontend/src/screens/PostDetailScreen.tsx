@@ -275,27 +275,27 @@ const PostDetailScreen = ({ route, navigation }: any) => {
       {
         text: "신고",
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
           // 신고 사유 선택 (데모용)
           Alert.alert("신고 사유", "사유를 선택해 주세요.", [
             {
               text: "욕설/비방",
-              onPress: () => {
-                const res = reportUser(id, "욕설/비방");
+              onPress: async () => {
+                const res = await reportUser(id, "욕설/비방", "부적절한 회원");
                 Alert.alert(res.success ? "신고 완료" : "알림", res.message);
               },
             },
             {
               text: "부적절한 게시물",
-              onPress: () => {
-                const res = reportUser(id, "부적절한 게시물");
+              onPress: async () => {
+                const res = await reportUser(id, "부적절한 사용", "부적절한 회원");
                 Alert.alert(res.success ? "신고 완료" : "알림", res.message);
               },
             },
             {
               text: "기타",
-              onPress: () => {
-                const res = reportUser(id, "기타");
+              onPress: async () => {
+                const res = await reportUser(id, "기타 사유", "부적절한 회원");
                 Alert.alert(res.success ? "신고 완료" : "알림", res.message);
               },
             },
@@ -314,29 +314,47 @@ const PostDetailScreen = ({ route, navigation }: any) => {
     setShowReportModal(true);
   };
 
-  const submitReport = () => {
+  const submitReport = async () => {
     if (!reportReason) {
       Alert.alert("알림", "신고 사유를 선택해 주세요.");
       return;
     }
 
-    if (reportType === "post") {
-      const res = reportPost(targetIdToReport);
-      if (res.success && isBlockChecked) {
-        blockUser(post.userId, post.nickname);
+    try {
+      if (reportType === "post") {
+        const res = await reportPost(targetIdToReport, reportReason);
+        if (res.success && isBlockChecked) {
+          await blockUser(post.userId, post.nickname);
+        }
+        Alert.alert(res.success ? "신고 완료" : "알림", res.message);
+      } else if (reportType === "user") {
+        const res = await reportUser(targetIdToReport, reportReason, "부적절한 회원");
+        if (res.success && isBlockChecked) {
+          await blockUser(targetIdToReport, targetNicknameToReport);
+        }
+        Alert.alert(res.success ? "신고 완료" : "알림", res.message);
+      } else if (reportType === "comment") {
+        // 댓글 신고 로직
+        const res = await api.reports.create({
+          targetType: "COMMENT",
+          targetId: targetIdToReport,
+          category: reportReason,
+        });
+        if (isBlockChecked) {
+          // 댓글 작성자 ID가 넘어와야 하는데 현재 targetIdToReport가 댓글 ID임.
+          // 댓글 객체에서 작성자 ID를 찾아야 함.
+          const targetComment = comments.find((c) => c.id === targetIdToReport);
+          if (targetComment) {
+            await blockUser(targetComment.userId, targetComment.user);
+          }
+        }
+        Alert.alert("신고 완료", "신고가 정상적으로 접수되었습니다.");
       }
-    } else if (reportType === "user") {
-      const res = reportUser(targetIdToReport, reportReason);
-      if (res.success && isBlockChecked) {
-        blockUser(targetIdToReport, targetNicknameToReport);
-      }
-    } else {
-      // 댓글 신고 로직
-      Alert.alert("신고 완료", "신고가 정상적으로 접수되었습니다.");
+    } catch (error) {
+      Alert.alert("오류", "신고 처리 중 오류가 발생했습니다.");
     }
 
     setShowReportModal(false);
-    Alert.alert("신고 완료", "정상적으로 접수되었습니다.");
   };
 
   const handleShare = async () => {
@@ -355,10 +373,14 @@ const PostDetailScreen = ({ route, navigation }: any) => {
       {
         text: "차단",
         style: "destructive",
-        onPress: () => {
-          blockUser(targetId, targetNickname);
-          Alert.alert("차단 완료", "해당 사용자의 글이 더 이상 보이지 않습니다.");
-          navigation.goBack(); // 상세페이지에서 차단 시 목록으로 이동
+        onPress: async () => {
+          const res = await blockUser(targetId, targetNickname);
+          if (res.success) {
+            Alert.alert("차단 완료", "해당 사용자의 글이 더 이상 보이지 않습니다.");
+            navigation.goBack(); // 상세페이지에서 차단 시 목록으로 이동
+          } else {
+            Alert.alert("알림", res.message);
+          }
         },
       },
     ]);
@@ -420,17 +442,41 @@ const PostDetailScreen = ({ route, navigation }: any) => {
             {aiSummary && (
               <Animated.View
                 entering={FadeInUp}
-                style={{ backgroundColor: THEMES[appTheme].accent + "0D" }}
-                className="p-6 rounded-3xl mb-8 border border-[#00E0D0]/10"
+                style={[
+                  {
+                    backgroundColor: THEMES[appTheme].accent + "1A",
+                    borderColor: THEMES[appTheme].accent + "33",
+                  },
+                  Platform.select({
+                    ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.2, shadowRadius: 15 },
+                    android: { elevation: 5 },
+                  }),
+                ]}
+                className="p-7 rounded-[32px] mb-10 border overflow-hidden"
               >
-                <View className="flex-row items-center mb-3">
-                  <Sparkles size={16} color={THEMES[appTheme].accent} />
-                  <Text style={{ color: THEMES[appTheme].accent }} className="text-xs font-bold ml-2 tracking-widest">
-                    AI SUMMARY
+                <View
+                  style={{ backgroundColor: THEMES[appTheme].accent + "26" }}
+                  className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl"
+                />
+                <View className="flex-row items-center mb-4">
+                  <View
+                    style={{ backgroundColor: THEMES[appTheme].accent }}
+                    className="w-8 h-8 rounded-full items-center justify-center mr-3 shadow-lg"
+                  >
+                    <Sparkles size={16} color={THEMES[appTheme].bg} />
+                  </View>
+                  <Text
+                    style={{ color: THEMES[appTheme].accent }}
+                    className="text-[11px] font-black ml-1 tracking-[3px] uppercase"
+                  >
+                    AI INSIGHT PREVIEW
                   </Text>
                 </View>
-                <Text style={{ color: THEMES[appTheme].text }} className="opacity-80 text-[14px] leading-6">
-                  {aiSummary}
+                <Text
+                  style={{ color: THEMES[appTheme].text }}
+                  className="text-[15px] leading-7 font-medium opacity-90 italic"
+                >
+                  "{aiSummary}"
                 </Text>
                 <Text style={{ color: THEMES[appTheme].text }} className="opacity-20 text-[10px] mt-4 font-bold italic">
                   * 본 요약은 LLM 서비스를 통해 생성되었습니다. 비식별화 처리가 완료된 본문만 전송됩니다.
@@ -560,9 +606,15 @@ const PostDetailScreen = ({ route, navigation }: any) => {
                   {comments
                     .filter((reply: Comment) => reply.parentId === item.id)
                     .map((reply: Comment) => (
-                      <View key={reply.id} className="ml-10 mt-3 flex-row">
-                        <View className="w-1 h-full bg-[#00E0D0]/10 mr-4 rounded-full" />
-                        <View className="flex-1 bg-[#002845]/10 p-5 rounded-[25px] border border-white/5">
+                      <View key={reply.id} className="ml-10 mt-4 flex-row">
+                        <View
+                          style={{ backgroundColor: THEMES[appTheme].accent + "33" }}
+                          className="w-[2px] h-full mr-5 rounded-full"
+                        />
+                        <View
+                          style={{ backgroundColor: THEMES[appTheme].surface + "33" }}
+                          className="flex-1 p-6 rounded-[30px] border border-white/5 shadow-sm"
+                        >
                           <View className="flex-row justify-between items-center mb-2">
                             <Text
                               className={`text-[11px] font-bold ${reply.isMine ? "text-[#FFD700]" : "text-[#00E0D0]"}`}

@@ -367,7 +367,7 @@ const SettingsScreen = ({ navigation }: any) => {
         </View>
       </ScrollView>
       {/* Theme Selection Modal */}
-      <Modal visible={showThemeModal} animationType="slide" transparent={true}>
+      <Modal visible={showThemeModal} animationType="none" transparent={true}>
         <View style={{ backgroundColor: THEMES[appTheme].bg + "F2" }} className="flex-1 pt-20">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -473,7 +473,7 @@ const SettingsScreen = ({ navigation }: any) => {
       </Modal>
 
       {/* Blocked Users Manager Modal */}
-      <Modal visible={showBlockedModal} animationType="slide" transparent={true}>
+      <Modal visible={showBlockedModal} animationType="none" transparent={true}>
         <View style={{ backgroundColor: THEMES[appTheme].bg + "F2" }} className="flex-1 pt-24">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -523,7 +523,14 @@ const SettingsScreen = ({ navigation }: any) => {
                           { text: "취소", style: "cancel" },
                           {
                             text: "해제",
-                            onPress: () => unblockUser(user.id),
+                            onPress: async () => {
+                              const res = await unblockUser(user.id);
+                              if (res.success) {
+                                Alert.alert("해제 완료", "차단이 해제되었습니다.");
+                              } else {
+                                Alert.alert("알림", res.message);
+                              }
+                            },
                             style: "destructive",
                           },
                         ]);
@@ -542,7 +549,7 @@ const SettingsScreen = ({ navigation }: any) => {
       </Modal>
 
       {/* Open Source License Modal */}
-      <Modal visible={showLicenseModal} animationType="slide" transparent={true}>
+      <Modal visible={showLicenseModal} animationType="none" transparent={true}>
         <View style={{ backgroundColor: THEMES[appTheme].bg + "F2" }} className="flex-1 pt-24">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -620,7 +627,7 @@ const SettingsScreen = ({ navigation }: any) => {
       </Modal>
 
       {/* PIN Input Modal */}
-      <Modal visible={showPasswordModal} animationType="fade" transparent={true}>
+      <Modal visible={showPasswordModal} animationType="none" transparent={true}>
         <View className="flex-1 bg-black/90 items-center justify-center px-8">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -706,7 +713,7 @@ const SettingsScreen = ({ navigation }: any) => {
       </Modal>
 
       {/* Delete Activity History Modal */}
-      <Modal visible={showDeleteModal} animationType="fade" transparent={true}>
+      <Modal visible={showDeleteModal} animationType="none" transparent={true}>
         <View className="flex-1 bg-black/80 items-center justify-center p-8">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
@@ -756,7 +763,7 @@ const SettingsScreen = ({ navigation }: any) => {
         </View>
       </Modal>
       {/* Usage Guide Modal (Comprehensive) */}
-      <Modal visible={showUsageGuideModal} animationType="slide" transparent={true}>
+      <Modal visible={showUsageGuideModal} animationType="none" transparent={true}>
         <View style={{ backgroundColor: THEMES[appTheme].bg + "F2" }} className="flex-1 pt-24">
           <View
             style={{ backgroundColor: THEMES[appTheme].surface }}
