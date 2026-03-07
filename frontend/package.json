@@ -11,7 +11,8 @@
     "predeploy": "npx expo export --platform web && node post-build.js",
     "deploy": "gh-pages -d dist",
     "postinstall": "node postinstall.js",
-    "build:android": "cross-env NODE_ENV=production cd android && gradlew assembleRelease"
+    "build:android": "cross-env NODE_ENV=production cd android && gradlew assembleRelease",
+    "build:aab": "cross-env NODE_ENV=production cd android && gradlew bundleRelease"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
