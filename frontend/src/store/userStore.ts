@@ -407,6 +407,11 @@ export const useUserStore = create<UserState>()(
     {
       name: "user-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => {
+        // 불필요하게 유지될 경우 오류를 일으킬 수 있는 상태 제외
+        const { isGlobalLoading, viewedPostsCount, ...rest } = state;
+        return rest;
+      },
     },
   ),
 );

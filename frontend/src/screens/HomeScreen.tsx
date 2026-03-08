@@ -29,7 +29,6 @@ import {
   ShoppingBag,
 } from "lucide-react-native";
 import { Modal, Alert, Animated, ActivityIndicator } from "react-native";
-import AnimatedReanimated, { FadeInUp } from "react-native-reanimated";
 import WaveLogo from "../components/WaveLogo";
 import { api } from "../services/api";
 import { useUserStore } from "../store/userStore";
@@ -306,16 +305,16 @@ const HomeScreen = ({ navigation }: any) => {
       // API 응답 구조에 맞게 매핑 (기본적으로 posts 배열이 온다고 가정)
       const mappedPosts: Post[] = Array.isArray(data)
         ? data.map((post: any) => ({
-          id: post.id?.toString() || post._id?.toString(),
-          userId: post.userId || "anonymous",
-          nickname: post.nickname || "익명의 너울",
-          category: post.category || "일상",
-          title: post.title || "제목 없는 파도",
-          content: post.content,
-          time: post.createdAt ? "방금 전" : "1시간 전",
-          likes: post.likesCount || 0,
-          comments: post.commentsCount || 0,
-        }))
+            id: post.id?.toString() || post._id?.toString(),
+            userId: post.userId || "anonymous",
+            nickname: post.nickname || "익명의 너울",
+            category: post.category || "일상",
+            title: post.title || "제목 없는 파도",
+            content: post.content,
+            time: post.createdAt ? "방금 전" : "1시간 전",
+            likes: post.likesCount || 0,
+            comments: post.commentsCount || 0,
+          }))
         : [];
       setPosts(mappedPosts.length > 0 ? mappedPosts : MOCK_POSTS);
     } catch (error) {
@@ -600,10 +599,10 @@ const HomeScreen = ({ navigation }: any) => {
                     borderColor: selectedCategory === item ? THEMES[appTheme].accent : "rgba(255,255,255,0.05)",
                   },
                   selectedCategory === item &&
-                  Platform.select({
-                    ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.4, shadowRadius: 10 },
-                    android: { elevation: 8 },
-                  }),
+                    Platform.select({
+                      ios: { shadowColor: THEMES[appTheme].accent, shadowOpacity: 0.4, shadowRadius: 10 },
+                      android: { elevation: 8 },
+                    }),
                 ]}
                 className={`px-5 py-2.5 rounded-full mx-1.5 border transition-all duration-300`}
               >
@@ -772,7 +771,7 @@ const HomeScreen = ({ navigation }: any) => {
             onPress={() => setShowWriteOptions(false)}
             className="flex-1 bg-black/60 items-center justify-end pb-40"
           >
-            <View className="flex-row space-x-8">
+            <View className="flex-row space-x-12">
               <View className="items-center">
                 <TouchableOpacity
                   onPress={() => {
@@ -1004,8 +1003,9 @@ const HomeScreen = ({ navigation }: any) => {
                     className={`flex-row items-center p-5 rounded-2xl border`}
                   >
                     <View
-                      className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-4 ${reportReason === reason ? "border-[#E7433C]" : "border-white/20"
-                        }`}
+                      className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-4 ${
+                        reportReason === reason ? "border-[#E7433C]" : "border-white/20"
+                      }`}
                     >
                       {reportReason === reason && <View className="w-2.5 h-2.5 rounded-full bg-[#E7433C]" />}
                     </View>
@@ -1026,8 +1026,9 @@ const HomeScreen = ({ navigation }: any) => {
                 className="flex-row items-center p-6 rounded-3xl mb-10 border border-white/5"
               >
                 <View
-                  className={`w-6 h-6 rounded-lg items-center justify-center mr-4 border ${isBlockChecked ? "bg-[#E7433C] border-[#E7433C]" : "border-white/20"
-                    }`}
+                  className={`w-6 h-6 rounded-lg items-center justify-center mr-4 border ${
+                    isBlockChecked ? "bg-[#E7433C] border-[#E7433C]" : "border-white/20"
+                  }`}
                 >
                   {isBlockChecked && <View className="w-3 h-1.5 border-l-2 border-b-2 border-white -rotate-45 mb-1" />}
                 </View>

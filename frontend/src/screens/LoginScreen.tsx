@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, Platform } from "react-native";
 import { CheckSquare, Square } from "lucide-react-native";
 import { Linking } from "react-native";
 import WaveLogo from "../components/WaveLogo";
@@ -46,7 +38,7 @@ const LoginScreen = () => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" }
+    { authorizationEndpoint: "https://kauth.kakao.com/oauth/authorize" },
   );
 
   // === 구글 로그인 설정 ===
@@ -58,7 +50,7 @@ const LoginScreen = () => {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
     },
-    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" }
+    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth" },
   );
 
   const activePlatformRef = useRef<string | null>(null);
@@ -127,9 +119,10 @@ const LoginScreen = () => {
       } else {
         Alert.alert("로그인 실패", response.message || "로그인 중 오류가 발생했습니다.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Login Error]", error);
-      Alert.alert("오류", "서버와의 통신이 원활하지 않습니다.");
+      const detail = error?.message || "알 수 없는 에러";
+      Alert.alert("오류", `서버와의 통신이 원활하지 않습니다.\n(${detail})`);
     } finally {
       setIsLoggingIn(false);
       isProcessingRef.current = false;
@@ -161,9 +154,10 @@ const LoginScreen = () => {
             const provider = activePlatformRef.current || (url.includes("google") ? "google" : "kakao");
 
             // 1. Ref 확인, 2. State 확인, 3. AsyncStorage 확인
-            let codeVerifier = provider === "google"
-              ? (googleVerifierRef.current || googleRequest?.codeVerifier)
-              : (kakaoVerifierRef.current || kakaoRequest?.codeVerifier);
+            let codeVerifier =
+              provider === "google"
+                ? googleVerifierRef.current || googleRequest?.codeVerifier
+                : kakaoVerifierRef.current || kakaoRequest?.codeVerifier;
 
             if (!codeVerifier) {
               const savedVerifier = await AsyncStorage.getItem(`${provider}_verifier`);
@@ -173,7 +167,9 @@ const LoginScreen = () => {
               }
             }
 
-            console.log(`[Auth] Final Check - Provider: ${provider}, Code: ${code.substring(0, 10)}..., Verifier: ${codeVerifier ? "FOUND" : "NOT FOUND"}`);
+            console.log(
+              `[Auth] Final Check - Provider: ${provider}, Code: ${code.substring(0, 10)}..., Verifier: ${codeVerifier ? "FOUND" : "NOT FOUND"}`,
+            );
             handleAuthComplete(provider, code, codeVerifier || undefined);
           } else {
             console.log("[Auth] No code found in deep link params. Params:", params);
